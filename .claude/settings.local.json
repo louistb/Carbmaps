@@ -3,7 +3,25 @@
     "allow": [
       "Bash(cd:*)",
       "Bash(netstat:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npm run:*)",
+      "Bash(git worktree:*)",
+      "Skill(update-config)",
+      "Bash(git:*)",
+      "Bash(npm install:*)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -Command \"@(3001,5173) | ForEach-Object { Get-NetTCPConnection -LocalPort $_ -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue } }\" 2>/dev/null || true",
+            "statusMessage": "Stopping CarbMaps dev servers..."
+          }
+        ]
+      }
     ]
   }
 }

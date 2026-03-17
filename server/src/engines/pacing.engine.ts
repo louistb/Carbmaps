@@ -28,9 +28,28 @@ function gradientFactor(gradientPct: number): number {
   return 0.70;
 }
 
-function estimateSpeedKmh(powerW: number, gradientPct: number): number {
-  const base = 30 * Math.cbrt(powerW / 200);
-  return Math.max(1, base * (1 - (gradientPct / 100) * 4));
+function estimateSpeedKmh(powerW: number, gradientPct: number, totalMassKg = 80): number {
+  // Physics model: P = (Fgravity + Frr + Faero) * v
+  // Faero = 0.5 * CdA * rho * v²  (CdA=0.3, rho=1.2 kg/m³)
+  // Fgravity = mass * 9.81 * grade/100
+  // Frr = Crr * mass * 9.81  (Crr=0.005)
+  const g = 9.81;
+  const aeroCoeff = 0.5 * 0.3 * 1.2; // 0.18
+  const Fgravity = totalMassKg * g * (gradientPct / 100);
+  const Frr = 0.005 * totalMassKg * g;
+  const Fconst = Fgravity + Frr;
+
+  // Solve cubic: aeroCoeff*v³ + Fconst*v - powerW = 0  (Newton's method)
+  let v = Math.max(0.5, powerW / (Fconst + 50)); // initial guess m/s
+  for (let i = 0; i < 25; i++) {
+    const f  = aeroCoeff * v * v * v + Fconst * v - powerW;
+    const df = 3 * aeroCoeff * v * v + Fconst;
+    const dv = f / df;
+    v -= dv;
+    if (v < 0.1) { v = 0.1; break; }
+    if (Math.abs(dv) < 1e-6) break;
+  }
+  return Math.max(1, v * 3.6); // m/s → km/h
 }
 
 export function runPacingEngine(route: ParsedRoute, rider: RiderSettings): PacingResult {
@@ -39,7 +58,8 @@ export function runPacingEngine(route: ParsedRoute, rider: RiderSettings): Pacin
 
   const midPct = (zone.low + zone.high) / 2;
   const roughBasePower = midPct * ftpWatts;
-  const roughSpeed = estimateSpeedKmh(roughBasePower, 0);
+  const totalMassKg = rider.weightKg + 8; // rider + bike
+  const roughSpeed = estimateSpeedKmh(roughBasePower, 0, totalMassKg);
   const roughDurationHours = Math.max(0.25, route.totalDistanceKm / roughSpeed);
 
   const durAdj = durationAdjustmentFactor(roughDurationHours);
@@ -74,7 +94,9 @@ export function runPacingEngine(route: ParsedRoute, rider: RiderSettings): Pacin
     const targetPowerW = clamp(baselinePct * ftpWatts * gFactor, ftpWatts * zone.low * 0.7, ftpWatts * 1.10);
     const targetPowerPct = (targetPowerW / ftpWatts) * 100;
 
-    const speedKmh = estimateSpeedKmh(targetPowerW, gradientPct);
+    // Use base power (not gradient-boosted) for speed — physics model already accounts for gravity
+    const speedPowerW = baselinePct * ftpWatts;
+    const speedKmh = estimateSpeedKmh(speedPowerW, gradientPct, totalMassKg);
     const segTimeSec = (segLengthKm / speedKmh) * 3600;
     const segTimeMin = segTimeSec / 60;
 

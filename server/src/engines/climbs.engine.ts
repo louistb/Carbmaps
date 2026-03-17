@@ -5,6 +5,7 @@ import { clamp } from '../utils/math';
 
 const MIN_GRADIENT_PCT = 4.0;
 const MIN_LENGTH_KM = 0.5;
+const MAX_GAP_KM = 4.0; // merge climbs with a flat gap smaller than this
 
 export function runClimbsEngine(
   route: ParsedRoute,
@@ -17,22 +18,42 @@ export function runClimbsEngine(
   const midZonePct = clamp(intensity, 55, 100) / 100;
   const climbPowerFactor = clamp((midZonePct + band / 100) * 1.075, 0, 1.05);
 
-  // Map each pacing segment gradient
   const segments = pacing.segments;
 
-  // Find runs of consecutive segments where gradient >= MIN_GRADIENT_PCT
-  const climbs: ClimbData[] = [];
+  // 1. Collect raw climb segment-index ranges
+  type Range = { start: number; end: number };
+  const rawRanges: Range[] = [];
   let i = 0;
-
   while (i < segments.length) {
     if (segments[i].gradient >= MIN_GRADIENT_PCT) {
-      // Start of a potential climb
-      const climbStart = i;
-      while (i < segments.length && segments[i].gradient >= MIN_GRADIENT_PCT) {
-        i++;
-      }
-      const climbEnd = i - 1;
+      const start = i;
+      while (i < segments.length && segments[i].gradient >= MIN_GRADIENT_PCT) i++;
+      rawRanges.push({ start, end: i - 1 });
+    } else {
+      i++;
+    }
+  }
 
+  // 2. Merge ranges whose gap (in km) is <= MAX_GAP_KM
+  const mergedRanges: Range[] = [];
+  for (const range of rawRanges) {
+    if (mergedRanges.length === 0) {
+      mergedRanges.push({ ...range });
+    } else {
+      const prev = mergedRanges[mergedRanges.length - 1];
+      const gapKm = segments[range.start].startKm - segments[prev.end].endKm;
+      if (gapKm <= MAX_GAP_KM) {
+        prev.end = range.end; // extend previous range
+      } else {
+        mergedRanges.push({ ...range });
+      }
+    }
+  }
+
+  // 3. Build ClimbData from merged ranges
+  const climbs: ClimbData[] = [];
+
+  for (const { start: climbStart, end: climbEnd } of mergedRanges) {
       const startKm = segments[climbStart].startKm;
       const endKm = segments[climbEnd].endKm;
       const lengthKm = endKm - startKm;
@@ -76,9 +97,6 @@ export function runClimbsEngine(
         suggestedPowerW: Math.round(suggestedPowerW),
         suggestedPowerPct: Math.round(suggestedPowerPct * 10) / 10,
       });
-    } else {
-      i++;
-    }
   }
 
   return { climbs };

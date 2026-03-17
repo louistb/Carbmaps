@@ -19,5 +19,5 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`CarbMap API running on http://localhost:${PORT}`);
+  console.log(`CarbMaps API running on http://localhost:${PORT}`);
 });

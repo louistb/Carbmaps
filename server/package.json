@@ -1,7 +1,7 @@
 {
-  "name": "carbmap-server",
+  "name": "carbmaps-server",
   "version": "1.0.0",
-  "description": "CarbMap backend API",
+  "description": "CarbMaps backend API",
   "main": "src/index.ts",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",

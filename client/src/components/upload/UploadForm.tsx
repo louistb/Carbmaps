@@ -59,8 +59,8 @@ export function UploadForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [file, setFile]             = useState<File | null>(null);
-  const [ftp, setFtp]               = useState(() => localStorage.getItem('carbmap_ftp') ?? '');
-  const [weight, setWeight]         = useState(() => localStorage.getItem('carbmap_weight') ?? '');
+  const [ftp, setFtp]               = useState(() => localStorage.getItem('carbmaps_ftp') ?? '');
+  const [weight, setWeight]         = useState(() => localStorage.getItem('carbmaps_weight') ?? '');
   const [intensity, setIntensity]   = useState(70);
   const [scheduleOn, setScheduleOn] = useState(false);
   const [startDate, setStartDate]   = useState('');
@@ -77,8 +77,8 @@ export function UploadForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !ftp || !weight) return;
-    localStorage.setItem('carbmap_ftp', ftp);
-    localStorage.setItem('carbmap_weight', weight);
+    localStorage.setItem('carbmaps_ftp', ftp);
+    localStorage.setItem('carbmaps_weight', weight);
     const fd = new FormData();
     fd.append('gpxFile', file);
     fd.append('ftpWatts', ftp);
@@ -113,7 +113,7 @@ export function UploadForm() {
           lineHeight: 1,
           marginBottom: '0.5rem',
         }}>
-          CarbMap
+          CarbMaps
         </h1>
         <p style={{
           fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",

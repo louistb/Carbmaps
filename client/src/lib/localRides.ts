@@ -1,6 +1,6 @@
 import type { AnalysisResult } from '../types/analysis';
 
-const KEY = 'carbmap_rides';
+const KEY = 'carbmaps_rides';
 
 export interface LocalRide {
   id: string;

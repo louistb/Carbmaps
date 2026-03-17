@@ -1,4 +1,4 @@
-# CarbMap 🗺️
+# CarbMaps 🗺️
 
 A local web app that analyses cycling GPX routes and generates personalised pacing, climb, nutrition, and weather plans.
 

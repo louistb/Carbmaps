@@ -47,7 +47,7 @@ export function Header() {
           lineHeight: 1,
           color: '#000',
         }}>
-          CarbMap
+          CarbMaps
         </div>
         <div style={{
           fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
