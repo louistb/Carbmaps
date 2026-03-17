@@ -23,12 +23,18 @@ export function SavedRidesList() {
   if (savedRides.length === 0) return null;
 
   return (
-    <div style={{ width: '100%', maxWidth: '560px' }}>
+    <div style={{ width: '100%' }}>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: '0.5rem',
-        marginBottom: '0.75rem',
+        display: 'flex', alignItems: 'center', gap: '0.75rem',
+        marginBottom: '1rem',
       }}>
-        <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+        <span style={{
+          fontFamily: "'Raleway', sans-serif",
+          fontSize: '0.62rem', fontWeight: 700,
+          letterSpacing: '0.12em', textTransform: 'uppercase',
+          color: 'var(--text-muted)',
+          whiteSpace: 'nowrap',
+        }}>
           Saved Rides
         </span>
         <div style={{ flex: 1, height: '1px', background: 'var(--border-subtle)' }} />
@@ -38,17 +44,37 @@ export function SavedRidesList() {
         {savedRides.map(ride => (
           <div key={ride.id} style={{
             background: '#fff',
-            border: '2px solid #000',
-            padding: '0.75rem 1rem',
+            border: '1.5px solid var(--border-subtle)',
+            borderRadius: 'var(--radius-md)',
+            padding: '0.875rem 1rem',
             display: 'flex',
             alignItems: 'center',
             gap: '0.75rem',
-          }}>
+            transition: 'border-color 0.15s, box-shadow 0.15s',
+          }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--accent-gold)';
+              (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(201,169,110,0.12)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-subtle)';
+              (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+            }}
+          >
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{
+                fontFamily: "'Raleway', sans-serif",
+                fontWeight: 700, fontSize: '0.9rem',
+                color: 'var(--text-primary)',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
                 {ride.name}
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '0.15rem', display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+              <div style={{
+                fontFamily: "'Raleway', sans-serif",
+                fontSize: '0.72rem', color: 'var(--text-muted)',
+                marginTop: '0.2rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap',
+              }}>
                 <span>{formatDate(ride.createdAt)}</span>
                 <span>·</span>
                 <span>{ride.totalDistanceKm.toFixed(0)} km</span>
@@ -62,7 +88,7 @@ export function SavedRidesList() {
             <button
               onClick={() => loadRide(ride.id)}
               className="btn btn-ghost"
-              style={{ fontSize: '0.78rem', padding: '0.3rem 0.7rem', flexShrink: 0 }}
+              style={{ fontSize: '0.72rem', padding: '0.3rem 0.8rem', flexShrink: 0 }}
             >
               Load
             </button>

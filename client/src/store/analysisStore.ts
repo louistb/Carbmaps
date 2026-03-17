@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type AppState = 'idle' | 'loading' | 'results';
-export type TabId = 'pacing' | 'climbs' | 'nutrition' | 'weather';
+export type TabId = 'pacing' | 'climbs' | 'nutrition' | 'weather' | 'cuesheet';
 
 export interface AnalysisResult {
   pacing: import('../types/analysis').PacingResult;

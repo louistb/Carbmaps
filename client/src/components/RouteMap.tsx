@@ -3,24 +3,38 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPoint, SegmentPacing, ClimbData } from '../types/analysis';
 
-// ── Colour helpers ────────────────────────────────────────────────────────────
+// ── Design tokens (mirrored from globals.css) ─────────────────────────────────
 
-// Greyscale: light = easy, dark = hard
+const GOLD       = '#C9A96E';
+const GOLD_DARK  = '#A8853E';
+const TEXT       = '#1A1A18';
+const MUTED      = '#A8998C';
+const BORDER     = '#E0D6C8';
+const BG         = '#F4EDE3';
+const RAL        = "'Raleway', sans-serif";
+
+// Warm tile: CartoDB Voyager — neutral but warmer than light_all
+const TILE_URL   = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+const TILE_ATTR  = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>';
+
+// ── Colour helpers ─────────────────────────────────────────────────────────────
+
+// Warm brown scale: light = easy, dark = hard  (matches PacingTab ZONES)
 function effortColor(pct: number): string {
-  if (pct < 55) return '#d8d8d8';
-  if (pct < 65) return '#b0b0b0';
-  if (pct < 75) return '#808080';
-  if (pct < 85) return '#484848';
-  if (pct < 95) return '#242424';
-  return '#000000';
+  if (pct < 55) return '#E8DDD0';
+  if (pct < 65) return '#C8B89A';
+  if (pct < 75) return '#A8946A';
+  if (pct < 85) return '#7A6040';
+  if (pct < 95) return '#4A3420';
+  return '#1A1A18';
 }
 
-// Greyscale elevation shading
+// Warm elevation shading: low = sandy, high = dark brown
 function elevColor(t: number): string {
-  if (t < 0.25) return '#d0d0d0';
-  if (t < 0.55) return '#909090';
-  if (t < 0.80) return '#505050';
-  return '#202020';
+  if (t < 0.25) return '#D4C4A8';
+  if (t < 0.55) return '#B09060';
+  if (t < 0.80) return '#7A6040';
+  return '#3A2810';
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -35,7 +49,14 @@ function pointsBetween(points: MapPoint[], startKm: number, endKm: number): MapP
   return points.filter(p => p.distanceKm >= startKm && p.distanceKm <= endKm);
 }
 
-// ── PacingMap ─────────────────────────────────────────────────────────────────
+// Shared Leaflet map options
+const MAP_OPTS: L.MapOptions = {
+  scrollWheelZoom: false,
+  zoomControl: true,
+  attributionControl: true,
+};
+
+// ── PacingMap ──────────────────────────────────────────────────────────────────
 
 interface PacingMapProps {
   points: MapPoint[];
@@ -44,38 +65,29 @@ interface PacingMapProps {
 }
 
 export function PacingMap({ points, segments, hoveredKm }: PacingMapProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
+  const ref       = useRef<HTMLDivElement>(null);
+  const mapRef    = useRef<L.Map | null>(null);
   const markerRef = useRef<L.CircleMarker | null>(null);
 
   useEffect(() => {
     if (!ref.current || points.length < 2) return;
 
-    const map = L.map(ref.current, {
-      scrollWheelZoom: false,
-      zoomControl: true,
-      attributionControl: true,
-    });
+    const map = L.map(ref.current, MAP_OPTS);
     mapRef.current = map;
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '© OpenStreetMap © CartoDB',
-      maxZoom: 19,
-    }).addTo(map);
+    L.tileLayer(TILE_URL, { attribution: TILE_ATTR, maxZoom: 19 }).addTo(map);
 
-    // Draw one polyline per segment, coloured by effort
     for (const seg of segments) {
       const pts = pointsBetween(points, seg.startKm, seg.endKm);
       if (pts.length < 2) continue;
       L.polyline(pts.map(p => [p.lat, p.lon] as L.LatLngTuple), {
         color: effortColor(seg.targetPowerPct),
         weight: 5,
-        opacity: 0.9,
+        opacity: 0.92,
       }).addTo(map);
     }
 
     const bounds = L.latLngBounds(points.map(p => [p.lat, p.lon] as L.LatLngTuple));
-    // Fit after invalidateSize so zoom is calculated on the real container size
     const tid = setTimeout(() => {
       if (!mapRef.current) return;
       map.invalidateSize();
@@ -85,7 +97,6 @@ export function PacingMap({ points, segments, hoveredKm }: PacingMapProps) {
     return () => { clearTimeout(tid); map.remove(); mapRef.current = null; };
   }, [points, segments]);
 
-  // Update hover marker
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -94,10 +105,10 @@ export function PacingMap({ points, segments, hoveredKm }: PacingMapProps) {
     if (hoveredKm === null) return;
     const pt = closestPoint(points, hoveredKm);
     markerRef.current = L.circleMarker([pt.lat, pt.lon], {
-      radius: 7,
-      fillColor: '#000000',
-      color: '#ffffff',
-      weight: 2,
+      radius: 8,
+      fillColor: GOLD,
+      color: '#fff',
+      weight: 2.5,
       fillOpacity: 1,
     }).addTo(map);
   }, [hoveredKm, points]);
@@ -106,7 +117,7 @@ export function PacingMap({ points, segments, hoveredKm }: PacingMapProps) {
   return <div ref={ref} style={{ width: '100%', height: 260 }} />;
 }
 
-// ── ClimbsMap ──────────────────────────────────────────────────────────────────
+// ── ClimbsMap ─────────────────────────────────────────────────────────────────
 
 interface ClimbsMapProps {
   points: MapPoint[];
@@ -115,32 +126,25 @@ interface ClimbsMapProps {
 }
 
 export function ClimbsMap({ points, climbs, hoveredClimbIdx }: ClimbsMapProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const markerRef = useRef<L.CircleMarker | null>(null);
+  const ref          = useRef<HTMLDivElement>(null);
+  const mapRef       = useRef<L.Map | null>(null);
+  const markerRef    = useRef<L.CircleMarker | null>(null);
   const highlightRef = useRef<L.Polyline | null>(null);
 
   useEffect(() => {
     if (!ref.current || points.length < 2) return;
 
-    const map = L.map(ref.current, {
-      scrollWheelZoom: false,
-      zoomControl: true,
-      attributionControl: true,
-    });
+    const map = L.map(ref.current, MAP_OPTS);
     mapRef.current = map;
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '© OpenStreetMap © CartoDB',
-      maxZoom: 19,
-    }).addTo(map);
+    L.tileLayer(TILE_URL, { attribution: TILE_ATTR, maxZoom: 19 }).addTo(map);
 
     // Base route coloured by elevation
-    const elevs = points.map(p => p.elevationM);
-    const minE = Math.min(...elevs);
-    const maxE = Math.max(...elevs);
-    const range = maxE - minE || 1;
-    const CHUNK = 10;
+    const elevs  = points.map(p => p.elevationM);
+    const minE   = Math.min(...elevs);
+    const maxE   = Math.max(...elevs);
+    const range  = maxE - minE || 1;
+    const CHUNK  = 10;
     for (let i = 0; i < points.length - 1; i += CHUNK) {
       const chunk = points.slice(i, Math.min(i + CHUNK + 1, points.length));
       if (chunk.length < 2) continue;
@@ -148,20 +152,26 @@ export function ClimbsMap({ points, climbs, hoveredClimbIdx }: ClimbsMapProps) {
       L.polyline(chunk.map(p => [p.lat, p.lon] as L.LatLngTuple), {
         color: elevColor((avgE - minE) / range),
         weight: 4,
-        opacity: 0.8,
+        opacity: 0.85,
       }).addTo(map);
     }
 
-    // Mark climb start dots
+    // Climb start dots — gold
     for (const climb of climbs) {
       const pt = closestPoint(points, climb.startKm);
       L.circleMarker([pt.lat, pt.lon], {
-        radius: 5,
-        fillColor: '#000000',
+        radius: 6,
+        fillColor: GOLD,
         color: '#fff',
-        weight: 1.5,
+        weight: 2,
         fillOpacity: 1,
-      }).bindTooltip(climb.name, { permanent: false, direction: 'top' }).addTo(map);
+      })
+        .bindTooltip(`<span style="font-family:${RAL};font-size:12px;font-weight:700;color:${TEXT}">${climb.name}</span>`, {
+          permanent: false,
+          direction: 'top',
+          className: 'carto-tooltip',
+        })
+        .addTo(map);
     }
 
     const bounds = L.latLngBounds(points.map(p => [p.lat, p.lon] as L.LatLngTuple));
@@ -190,7 +200,7 @@ export function ClimbsMap({ points, climbs, hoveredClimbIdx }: ClimbsMapProps) {
     const pts = pointsBetween(points, climb.startKm, climb.startKm + climb.lengthKm);
     if (pts.length >= 2) {
       highlightRef.current = L.polyline(pts.map(p => [p.lat, p.lon] as L.LatLngTuple), {
-        color: '#000000',
+        color: GOLD,
         weight: 6,
         opacity: 1,
       }).addTo(map);
@@ -198,9 +208,9 @@ export function ClimbsMap({ points, climbs, hoveredClimbIdx }: ClimbsMapProps) {
 
     const pt = closestPoint(points, climb.startKm);
     markerRef.current = L.circleMarker([pt.lat, pt.lon], {
-      radius: 9,
-      fillColor: '#000000',
-      color: '#ffffff',
+      radius: 10,
+      fillColor: GOLD_DARK,
+      color: '#fff',
       weight: 2.5,
       fillOpacity: 1,
     }).addTo(map);
@@ -210,7 +220,7 @@ export function ClimbsMap({ points, climbs, hoveredClimbIdx }: ClimbsMapProps) {
   return <div ref={ref} style={{ width: '100%', height: '100%', minHeight: 260 }} />;
 }
 
-// ── NutritionMap ───────────────────────────────────────────────────────────────
+// ── NutritionMap ──────────────────────────────────────────────────────────────
 
 interface Restaurant {
   id: number;
@@ -230,7 +240,6 @@ function haversineM(lat1: number, lon1: number, lat2: number, lon2: number): num
 }
 
 function isNearRoute(lat: number, lon: number, points: MapPoint[], thresholdM = 500): boolean {
-  // Sample every 5th point for performance
   for (let i = 0; i < points.length; i += 5) {
     if (haversineM(lat, lon, points[i].lat, points[i].lon) < thresholdM) return true;
   }
@@ -244,32 +253,37 @@ const AMENITY_LABEL: Record<string, string> = {
   bakery: 'Bakery',
 };
 
+const AMENITY_COLOR: Record<string, string> = {
+  restaurant: GOLD,
+  cafe:       '#A8946A',
+  fast_food:  '#C8B89A',
+  bakery:     GOLD_DARK,
+};
+
 interface NutritionMapProps {
   points: MapPoint[];
 }
 
 export function NutritionMap({ points }: NutritionMapProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
+  const ref       = useRef<HTMLDivElement>(null);
+  const mapRef    = useRef<L.Map | null>(null);
+  const abortRef  = useRef<AbortController | null>(null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
-  const [count, setCount] = useState(0);
+  const [count, setCount]   = useState(0);
 
+  // Initialise map (no fetch)
   useEffect(() => {
     if (!ref.current || points.length < 2) return;
 
-    const map = L.map(ref.current, { scrollWheelZoom: false, zoomControl: true });
+    const map = L.map(ref.current, MAP_OPTS);
     mapRef.current = map;
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '© OpenStreetMap © CartoDB',
-      maxZoom: 19,
-    }).addTo(map);
+    L.tileLayer(TILE_URL, { attribution: TILE_ATTR, maxZoom: 19 }).addTo(map);
 
-    // Draw route
     L.polyline(points.map(p => [p.lat, p.lon] as L.LatLngTuple), {
-      color: '#000',
-      weight: 3,
-      opacity: 0.6,
+      color: '#A8946A',
+      weight: 3.5,
+      opacity: 0.75,
     }).addTo(map);
 
     const bounds = L.latLngBounds(points.map(p => [p.lat, p.lon] as L.LatLngTuple));
@@ -279,9 +293,18 @@ export function NutritionMap({ points }: NutritionMapProps) {
       map.fitBounds(bounds, { padding: [24, 24] });
     }, 250);
 
-    // Fetch restaurants via Overpass API
-    const lats = points.map(p => p.lat);
-    const lons = points.map(p => p.lon);
+    return () => { clearTimeout(tid); abortRef.current?.abort(); map.remove(); mapRef.current = null; };
+  }, [points]);
+
+  const fetchRestaurants = () => {
+    if (!mapRef.current || status === 'loading') return;
+
+    abortRef.current?.abort();
+    const abortCtrl = new AbortController();
+    abortRef.current = abortCtrl;
+
+    const lats  = points.map(p => p.lat);
+    const lons  = points.map(p => p.lon);
     const south = Math.min(...lats) - 0.01;
     const north = Math.max(...lats) + 0.01;
     const west  = Math.min(...lons) - 0.01;
@@ -295,8 +318,6 @@ export function NutritionMap({ points }: NutritionMapProps) {
       'https://overpass-api.de/api/interpreter',
     ];
 
-    const abortCtrl = new AbortController();
-
     const tryFetch = async () => {
       for (const url of MIRRORS) {
         try {
@@ -304,7 +325,6 @@ export function NutritionMap({ points }: NutritionMapProps) {
           if (r.ok) return await r.json();
         } catch (e: any) {
           if (e?.name === 'AbortError') throw e;
-          // try next mirror
         }
       }
       throw new Error('all mirrors failed');
@@ -325,14 +345,21 @@ export function NutritionMap({ points }: NutritionMapProps) {
           }));
 
         restaurants.forEach(r => {
+          const color = AMENITY_COLOR[r.type] ?? GOLD;
           L.circleMarker([r.lat, r.lon], {
             radius: 7,
-            fillColor: '#000',
+            fillColor: color,
             color: '#fff',
             weight: 2,
             fillOpacity: 1,
           })
-            .bindPopup(`<b style="font-family:Georgia,serif">${r.name}</b><br><span style="font-size:0.8em;color:#666">${AMENITY_LABEL[r.type] ?? r.type}</span>`)
+            .bindPopup(
+              `<div style="font-family:${RAL};padding:2px 0">` +
+              `<div style="font-weight:800;font-size:13px;color:${TEXT};margin-bottom:2px">${r.name}</div>` +
+              `<div style="font-size:11px;color:${MUTED};font-weight:600">${AMENITY_LABEL[r.type] ?? r.type}</div>` +
+              `</div>`,
+              { maxWidth: 180 }
+            )
             .addTo(mapRef.current!);
         });
 
@@ -340,23 +367,103 @@ export function NutritionMap({ points }: NutritionMapProps) {
         setStatus('done');
       })
       .catch((err) => { if (err?.name !== 'AbortError') setStatus('error'); });
-
-    return () => { clearTimeout(tid); abortCtrl.abort(); map.remove(); mapRef.current = null; };
-  }, [points]);
+  };
 
   if (points.length < 2) return null;
 
-  const sans = "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif";
-
   return (
     <div>
-      <div ref={ref} style={{ width: '100%', height: 320, border: '2px solid #000' }} />
-      <div style={{ fontFamily: sans, fontSize: '0.72rem', color: '#999', marginTop: '0.4rem' }}>
-        {status === 'loading' && 'Loading restaurants near route…'}
-        {status === 'done'    && `${count} place${count !== 1 ? 's' : ''} found within 500 m of route · click a dot for details`}
-        {status === 'error'   && 'Could not load restaurant data (Overpass API unreachable)'}
-        {status === 'idle'    && ''}
+      {/* Map */}
+      <div style={{ position: 'relative' }}>
+        <div ref={ref} style={{
+          width: '100%', height: 320,
+          border: '1.5px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-sm)',
+          overflow: 'hidden',
+        }} />
+
+        {/* Loading overlay */}
+        {status === 'loading' && (
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'rgba(244,237,227,0.82)',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            gap: '0.75rem',
+            borderRadius: 'var(--radius-sm)',
+            backdropFilter: 'blur(2px)',
+          }}>
+            <svg width="36" height="36" viewBox="0 0 36 36" style={{ animation: 'spin 1s linear infinite' }}>
+              <circle cx="18" cy="18" r="14" fill="none" stroke="#E0D6C8" strokeWidth="3" />
+              <path d="M18 4 A14 14 0 0 1 32 18" fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" />
+            </svg>
+            <div style={{ fontFamily: RAL, fontWeight: 700, fontSize: '0.8rem', color: TEXT, letterSpacing: '0.04em' }}>
+              Searching for restaurants…
+            </div>
+            <div style={{ fontFamily: RAL, fontWeight: 500, fontSize: '0.7rem', color: MUTED }}>
+              Querying OpenStreetMap
+            </div>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          </div>
+        )}
+
+        {/* Idle prompt overlay */}
+        {status === 'idle' && (
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'rgba(244,237,227,0.72)',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            gap: '0.75rem',
+            borderRadius: 'var(--radius-sm)',
+            backdropFilter: 'blur(1px)',
+          }}>
+            <div style={{ fontSize: '1.75rem' }}>🍽️</div>
+            <div style={{ fontFamily: RAL, fontWeight: 700, fontSize: '0.85rem', color: TEXT }}>
+              Find restaurants along your route
+            </div>
+            <div style={{ fontFamily: RAL, fontWeight: 500, fontSize: '0.72rem', color: MUTED, textAlign: 'center', maxWidth: 240 }}>
+              Cafés, restaurants, bakeries &amp; fast food within 500m
+            </div>
+            <button
+              onClick={fetchRestaurants}
+              style={{
+                marginTop: '0.25rem',
+                fontFamily: RAL,
+                fontWeight: 700,
+                fontSize: '0.75rem',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                background: GOLD,
+                color: '#fff',
+                border: 'none',
+                borderRadius: 2,
+                padding: '0.6rem 1.4rem',
+                cursor: 'pointer',
+              }}
+            >
+              Search Now
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Status bar */}
+      <div style={{ fontFamily: RAL, fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.5rem', fontWeight: 500 }}>
+        {status === 'done'  && `${count} place${count !== 1 ? 's' : ''} found within 500m · click a marker for details`}
+        {status === 'error' && '⚠ Could not load restaurant data — Overpass API unreachable'}
+      </div>
+
+      {status === 'done' && count > 0 && (
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+          {Object.entries(AMENITY_LABEL).map(([key, label]) => (
+            <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: AMENITY_COLOR[key] ?? GOLD, flexShrink: 0 }} />
+              <span style={{ fontFamily: RAL, fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500 }}>{label}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

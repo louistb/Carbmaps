@@ -12,32 +12,35 @@ const MESSAGES = [
   "Pretending to consult a sports nutritionist...",
 ];
 
-const sans = "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif";
-
 export function LoadingScreen() {
   const [messageIndex, setMessageIndex] = useState(0);
-  const [dots, setDots] = useState(0);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const msgInterval = setInterval(() => setMessageIndex(i => (i + 1) % MESSAGES.length), 2500);
-    const dotInterval = setInterval(() => setDots(d => (d + 1) % 4), 400);
-    const progInterval = setInterval(() => setProgress(p => (p + 2) % 100), 80);
-    return () => { clearInterval(msgInterval); clearInterval(dotInterval); clearInterval(progInterval); };
+    const progInterval = setInterval(() => setProgress(p => Math.min(p + 1.2, 95)), 80);
+    return () => { clearInterval(msgInterval); clearInterval(progInterval); };
   }, []);
 
   return (
     <div style={{
-      minHeight: '420px',
+      minHeight: '440px',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '3rem 2rem',
-      gap: '1.75rem',
+      gap: '2rem',
+      background: 'var(--bg-base)',
     }}>
-      <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 700, fontSize: '1.15rem', color: '#000' }}>
-        Analysing your route{'.'.repeat(dots)}
+      <div style={{
+        fontFamily: "'Raleway', sans-serif",
+        fontWeight: 900,
+        fontSize: '1.5rem',
+        color: 'var(--text-primary)',
+        letterSpacing: '-0.03em',
+      }}>
+        Analysing your route
       </div>
 
       <AnimatePresence mode="wait">
@@ -48,28 +51,31 @@ export function LoadingScreen() {
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.22, ease: 'easeOut' }}
           style={{
-            fontFamily: sans,
-            color: '#999',
-            fontSize: '0.85rem',
+            fontFamily: "'Raleway', sans-serif",
+            color: 'var(--text-muted)',
+            fontSize: '0.9rem',
             fontStyle: 'italic',
             textAlign: 'center',
             maxWidth: '340px',
+            fontWeight: 400,
           }}
         >
           {MESSAGES[messageIndex]}
         </motion.div>
       </AnimatePresence>
 
-      {/* Progress bar — flat, no radius */}
+      {/* Progress bar */}
       <div style={{
-        width: '220px', height: '3px',
-        background: '#e5e5e5',
+        width: '240px', height: '3px',
+        background: 'var(--border-subtle)',
+        borderRadius: 2,
         overflow: 'hidden',
       }}>
         <div style={{
           height: '100%',
           width: `${progress}%`,
-          background: '#000',
+          background: 'var(--accent-gold)',
+          borderRadius: 2,
           transition: 'width 0.08s linear',
         }} />
       </div>

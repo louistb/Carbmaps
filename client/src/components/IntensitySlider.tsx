@@ -40,36 +40,43 @@ export function IntensitySlider({ value, onChange, step = 0.5, compact = false }
           -webkit-appearance: none;
           appearance: none;
           width: 100%;
-          height: ${compact ? 4 : 6}px;
-          background: #cccccc;
+          height: ${compact ? 3 : 5}px;
+          background: var(--border-subtle);
           outline: none;
           cursor: pointer;
+          border-radius: 2px;
         }
         .intensity-range::-webkit-slider-runnable-track {
-          height: ${compact ? 4 : 6}px;
-          background: #cccccc;
+          height: ${compact ? 3 : 5}px;
+          background: var(--border-subtle);
+          border-radius: 2px;
         }
         .intensity-range::-moz-range-track {
-          height: ${compact ? 4 : 6}px;
-          background: #cccccc;
+          height: ${compact ? 3 : 5}px;
+          background: var(--border-subtle);
           border: none;
+          border-radius: 2px;
         }
         .intensity-range::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
           width: ${compact ? 14 : 18}px;
           height: ${compact ? 14 : 18}px;
-          margin-top: ${compact ? '-5px' : '-6px'};
-          background: #fff;
-          border: 2px solid #000;
+          margin-top: ${compact ? '-5.5px' : '-6.5px'};
+          background: var(--accent-gold);
+          border: 2px solid #fff;
+          border-radius: 50%;
           cursor: pointer;
+          box-shadow: 0 1px 4px rgba(201,169,110,0.4);
         }
         .intensity-range::-moz-range-thumb {
           width: ${compact ? 14 : 18}px;
           height: ${compact ? 14 : 18}px;
-          background: #fff;
-          border: 2px solid #000;
+          background: var(--accent-gold);
+          border: 2px solid #fff;
+          border-radius: 50%;
           cursor: pointer;
+          box-shadow: 0 1px 4px rgba(201,169,110,0.4);
         }
       `}</style>
 
@@ -79,13 +86,14 @@ export function IntensitySlider({ value, onChange, step = 0.5, compact = false }
             position: 'absolute',
             left: `${fillPct}%`,
             transform: 'translateX(-50%)',
-            background: '#000',
+            background: 'var(--accent-gold)',
             color: '#fff',
-            fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+            fontFamily: "'Raleway', sans-serif",
             fontSize: '0.65rem',
             fontWeight: 700,
             letterSpacing: '0.05em',
             padding: '0.2rem 0.5rem',
+            borderRadius: '2px',
             whiteSpace: 'nowrap',
             pointerEvents: 'none',
           }}>
@@ -113,9 +121,9 @@ export function IntensitySlider({ value, onChange, step = 0.5, compact = false }
                 position: 'absolute',
                 left: `${midPos}%`,
                 transform: 'translateX(-50%)',
-                fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+                fontFamily: "'Raleway', sans-serif",
                 fontSize: '0.62rem',
-                color: '#999',
+                color: 'var(--text-muted)',
                 fontWeight: 600,
                 letterSpacing: '0.06em',
                 textTransform: 'uppercase',

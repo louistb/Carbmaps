@@ -9,6 +9,7 @@ import { PacingTab } from './components/tabs/PacingTab';
 import { ClimbsTab } from './components/tabs/ClimbsTab';
 import { NutritionTab } from './components/tabs/NutritionTab';
 import { WeatherTab } from './components/tabs/WeatherTab';
+import { CueSheetTab } from './components/tabs/CueSheetTab';
 
 const tabVariants = {
   initial: { opacity: 0, y: 6 },
@@ -30,6 +31,7 @@ function ResultsView() {
           {activeTab === 'climbs'    && <ClimbsTab    data={result.climbs}    routePoints={result.routePoints ?? []} />}
           {activeTab === 'nutrition' && <NutritionTab data={result.nutrition} routePoints={result.routePoints ?? []} />}
           {activeTab === 'weather'   && result.weather && <WeatherTab data={result.weather} />}
+          {activeTab === 'cuesheet'  && <CueSheetTab pacing={result.pacing} climbs={result.climbs} nutrition={result.nutrition} routePoints={result.routePoints ?? []} />}
         </motion.div>
       </AnimatePresence>
     </div>
@@ -46,15 +48,17 @@ export default function App() {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
-      padding: '2.5rem 1.25rem',
       background: 'var(--bg-base)',
     }}>
       <div style={{
         width: '100%',
-        maxWidth: '920px',
+        maxWidth: '960px',
         background: 'var(--bg-surface)',
         border: '1px solid var(--border-subtle)',
+        boxShadow: '0 4px 32px rgba(26,26,24,0.07)',
+        borderRadius: 'var(--radius-lg)',
+        overflow: 'hidden',
+        margin: '2rem 1rem',
       }}>
         <AnimatePresence mode="wait">
           {appState === 'idle' && (

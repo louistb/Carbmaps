@@ -1,4 +1,6 @@
-/* CarbMaps — Swiss Typographic Style */
+/* CarbMaps — Warm Editorial Style */
+
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800;900&family=MedievalSharp&display=swap');
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -8,39 +10,38 @@
 
 :root {
   /* Surfaces */
-  --bg-base:     #ffffff;
-  --bg-surface:  #ffffff;
-  --bg-elevated: #f5f5f5;
-  --bg-hover:    #ebebeb;
+  --bg-base:     #F4EDE3;
+  --bg-surface:  #FFFFFF;
+  --bg-elevated: #F0E9DF;
+  --bg-hover:    #E8DDD2;
 
-  /* Accents — black only */
-  --accent-primary:   #000000;
-  --accent-secondary: #333333;
-  --accent-success:   #1a4a1a;
-  --accent-info:      #001a40;
-  --accent-danger:    #5a0000;
-  --accent-warning:   #4a2800;
-  --accent-lime:      #2a3a00;
-  --accent-purple:    #1a0040;
+  /* Accent */
+  --accent-primary:   #1A1A18;
+  --accent-gold:      #C9A96E;
+  --accent-gold-dark: #A8853E;
+  --accent-success:   #2C4A2C;
+  --accent-info:      #0A1F3A;
+  --accent-danger:    #6B1F0A;
+  --accent-warning:   #4A2800;
 
   /* Text */
-  --text-primary:   #000000;
-  --text-secondary: #555555;
-  --text-muted:     #999999;
+  --text-primary:   #1A1A18;
+  --text-secondary: #6B5E52;
+  --text-muted:     #A8998C;
 
-  /* Borders — bold black lines */
-  --border-subtle: #cccccc;
-  --border-strong: #000000;
+  /* Borders */
+  --border-subtle: #E0D6C8;
+  --border-strong: #1A1A18;
 
-  /* No radius — flat */
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
+  /* Radius — slight warmth */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
 
-  font-family: Georgia, 'Times New Roman', 'Palatino Linotype', serif;
+  font-family: 'Raleway', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 html, body {
@@ -59,41 +60,45 @@ html, body {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg-elevated); }
-::-webkit-scrollbar-thumb { background: #000; }
+::-webkit-scrollbar-thumb { background: var(--accent-gold); border-radius: 2px; }
 
 /* ── Cards ── */
 .card {
   background: var(--bg-surface);
-  border: 2px solid #000;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
   padding: 1.5rem;
+  box-shadow: 0 1px 4px rgba(26,26,24,0.06);
 }
 
 .card-elevated {
   background: var(--bg-elevated);
-  border: 2px solid #000;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
   padding: 1rem 1.25rem;
 }
 
 /* ── Typography helpers ── */
 .label {
-  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 0.65rem;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
 
 .value-large {
+  font-family: 'Raleway', sans-serif;
   font-size: 1.9rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--text-primary);
   line-height: 1.1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .value-accent {
-  color: var(--text-primary);
+  color: var(--accent-gold);
 }
 
 /* ── Badges ── */
@@ -102,21 +107,22 @@ html, body {
   align-items: center;
   gap: 0.25rem;
   padding: 0.2rem 0.6rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 0.65rem;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  border: 1.5px solid #000;
-  color: #000;
-  background: #fff;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-subtle);
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
 }
 
-.badge-warning  { border-color: #000; color: #000; background: #fff; }
-.badge-success  { border-color: #000; color: #000; background: #f5f5f5; }
-.badge-info     { border-color: #000; color: #000; background: #fff; }
-.badge-danger   { border-color: #000; color: #000; background: #f0f0f0; }
-.badge-lime     { border-color: #000; color: #000; background: #fff; }
+.badge-warning  { border-color: #C9A96E; color: #7A5010; background: #FBF3E4; }
+.badge-success  { border-color: #6BA06B; color: #2C4A2C; background: #EDF5ED; }
+.badge-info     { border-color: #6B8AB0; color: #0A1F3A; background: #EDF2F8; }
+.badge-danger   { border-color: #C06050; color: #6B1F0A; background: #F9EDEA; }
+.badge-lime     { border-color: #8AB06B; color: #2A3A00; background: #F0F5E8; }
 
 /* ── Tables ── */
 table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
@@ -124,13 +130,13 @@ table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
 th {
   text-align: left;
   padding: 0.55rem 0.75rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 0.65rem;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #000;
-  border-bottom: 2px solid #000;
+  color: var(--text-muted);
+  border-bottom: 1.5px solid var(--border-subtle);
   background: var(--bg-elevated);
 }
 
@@ -148,62 +154,64 @@ tr:hover td { background: var(--bg-hover); }
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.7rem 1.5rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 0.82rem;
+  padding: 0.75rem 1.75rem;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.12s, color 0.12s;
-  border: 2px solid #000;
+  transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.12s;
+  border-radius: var(--radius-sm);
   outline: none;
 }
 
 .btn-primary {
-  background: #000;
+  background: var(--accent-gold);
   color: #fff;
+  border: 1.5px solid var(--accent-gold);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #fff;
-  color: #000;
+  background: var(--accent-gold-dark);
+  border-color: var(--accent-gold-dark);
+  transform: translateY(-1px);
 }
 
 .btn-primary:disabled {
-  opacity: 0.25;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
 .btn-ghost {
-  background: #fff;
-  color: #000;
-  border: 2px solid #000;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-subtle);
 }
 
 .btn-ghost:hover {
-  background: #000;
-  color: #fff;
+  background: var(--bg-hover);
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 /* ── Stat grids ── */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0;
-  border-top: 2px solid #000;
-  border-left: 2px solid #000;
+  gap: 1px;
+  background: var(--border-subtle);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 
 .stat-card {
   background: var(--bg-surface);
-  border-right: 2px solid #000;
-  border-bottom: 2px solid #000;
-  padding: 1rem 1.1rem;
+  padding: 1.1rem 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.3rem;
 }
 
-/* remove the accent top line */
 .stat-card::before { display: none; }

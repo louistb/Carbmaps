@@ -1,29 +1,43 @@
 import React, { useRef, useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { useAnalysisStore } from '../../store/analysisStore';
 import { SavedRidesList } from './SavedRidesList';
 import { IntensitySlider } from '../IntensitySlider';
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 18 },
+  show:   { opacity: 1, y: 0,  transition: { duration: 0.38, ease: 'easeOut' } },
+};
+
+const stagger = {
+  hidden: {},
+  show:   { transition: { staggerChildren: 0.08 } },
+};
+
 const inputStyle: React.CSSProperties = {
   width: '100%',
   background: '#fff',
-  border: '2px solid #000',
-  padding: '0.65rem 0.9rem',
-  color: '#000',
-  fontFamily: "Georgia, 'Times New Roman', serif",
+  border: '1.5px solid var(--border-subtle)',
+  borderRadius: 'var(--radius-sm)',
+  padding: '0.7rem 1rem',
+  color: 'var(--text-primary)',
+  fontFamily: "'Raleway', sans-serif",
   fontSize: '0.95rem',
+  fontWeight: 500,
   outline: 'none',
+  transition: 'border-color 0.15s',
 };
 
-const sansLabel: React.CSSProperties = {
-  fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+const labelStyle: React.CSSProperties = {
+  fontFamily: "'Raleway', sans-serif",
   fontSize: '0.62rem',
   fontWeight: 700,
-  letterSpacing: '0.1em',
+  letterSpacing: '0.12em',
   textTransform: 'uppercase',
-  color: '#999',
+  color: 'var(--text-muted)',
   display: 'block',
-  marginBottom: '0.35rem',
+  marginBottom: '0.4rem',
 };
 
 function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
@@ -32,21 +46,25 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
       type="button"
       onClick={onToggle}
       style={{
-        width: 40, height: 22,
-        border: '2px solid #000',
-        background: on ? '#000' : '#fff',
+        width: 44, height: 24,
+        border: '1.5px solid',
+        borderColor: on ? 'var(--accent-gold)' : 'var(--border-subtle)',
+        background: on ? 'var(--accent-gold)' : 'transparent',
+        borderRadius: 12,
         cursor: 'pointer',
         position: 'relative',
-        transition: 'background 0.14s',
+        transition: 'background 0.2s, border-color 0.2s',
         flexShrink: 0,
       }}
     >
       <span style={{
         position: 'absolute',
-        top: 3, left: on ? 19 : 3,
-        width: 12, height: 12,
-        background: on ? '#fff' : '#000',
-        transition: 'left 0.14s',
+        top: 3,
+        left: on ? 21 : 3,
+        width: 14, height: 14,
+        background: on ? '#fff' : 'var(--text-muted)',
+        borderRadius: '50%',
+        transition: 'left 0.2s, background 0.2s',
       }} />
     </button>
   );
@@ -93,120 +111,196 @@ export function UploadForm() {
 
   return (
     <div style={{
-      padding: '4rem 2.5rem 3rem',
+      minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: '2.5rem',
+      background: 'var(--bg-base)',
+      padding: '0 1.25rem 4rem',
     }}>
+
       {/* Hero */}
-      <div style={{ textAlign: 'center' }}>
-        <h1 style={{
-          fontFamily: "Georgia, 'Times New Roman', serif",
-          fontSize: '3rem',
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        style={{
+          textAlign: 'center',
+          padding: '5rem 1rem 3.5rem',
+          width: '100%',
+          maxWidth: '560px',
+        }}
+      >
+        <div style={{
+          display: 'inline-block',
+          fontFamily: "'Raleway', sans-serif",
+          fontSize: '0.65rem',
           fontWeight: 700,
-          letterSpacing: '-0.04em',
-          color: '#000',
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase',
+          color: 'var(--accent-gold)',
+          marginBottom: '1.25rem',
+        }}>
+          Eat carbs, ride hard
+        </div>
+        <h1 style={{
+          fontFamily: "'MedievalSharp', cursive",
+          fontSize: 'clamp(3.5rem, 10vw, 6rem)',
+          fontWeight: 400,
+          letterSpacing: '0.02em',
+          color: 'var(--text-primary)',
           lineHeight: 1,
-          marginBottom: '0.5rem',
+          marginBottom: '1.25rem',
         }}>
           CarbMaps
         </h1>
-        <p style={{
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
-          color: '#999',
-          fontSize: '0.78rem',
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
+        <div style={{
+          fontFamily: "'Raleway', sans-serif",
+          fontSize: '0.62rem',
+          fontWeight: 600,
+          letterSpacing: '0.1em',
+          color: 'var(--text-muted)',
+          marginBottom: '1rem',
+          opacity: 0.7,
         }}>
-          Drop your route. Get your plan.
-        </p>
-      </div>
+          v{__APP_VERSION__}
+        </div>
 
-      <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '480px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <p style={{
+          fontFamily: "'Raleway', sans-serif",
+          color: 'var(--text-muted)',
+          fontSize: '1rem',
+          fontWeight: 400,
+          lineHeight: 1.6,
+          maxWidth: '380px',
+          margin: '0 auto',
+        }}>
+          Drop your route. Get your pacing plan, nutrition strategy, and weather forecast — all in one.
+        </p>
+      </motion.div>
+
+      {/* Form */}
+      <motion.form
+        onSubmit={handleSubmit}
+        variants={stagger}
+        initial="hidden"
+        animate="show"
+        style={{ width: '100%', maxWidth: '520px', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+      >
 
         {/* Drop zone */}
-        <div
-          onDrop={handleDrop}
-          onDragOver={e => { e.preventDefault(); setDragging(true); }}
-          onDragLeave={() => setDragging(false)}
-          onClick={() => fileInputRef.current?.click()}
-          style={{
-            border: `2px solid #000`,
-            background: dragging ? '#f0f0f0' : file ? '#f5f5f5' : '#fff',
-            padding: '2rem 1.5rem',
-            textAlign: 'center',
-            cursor: 'pointer',
-            transition: 'background 0.12s',
-          }}
-        >
-          <input ref={fileInputRef} type="file" accept=".gpx,.fit,.tcx"
-            style={{ display: 'none' }}
-            onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
+        <motion.div variants={fadeUp}>
+          <div
+            onDrop={handleDrop}
+            onDragOver={e => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              border: `2px dashed ${dragging ? 'var(--accent-gold)' : file ? 'var(--accent-gold)' : 'var(--border-subtle)'}`,
+              borderRadius: 'var(--radius-md)',
+              background: dragging ? '#FBF3E4' : file ? '#FFFCF5' : '#fff',
+              padding: '2.5rem 1.5rem',
+              textAlign: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.18s',
+            }}
+          >
+            <input ref={fileInputRef} type="file" accept=".gpx,.fit,.tcx"
+              style={{ display: 'none' }}
+              onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
 
-          {file ? (
-            <div>
-              <div style={{
-                fontFamily: "Georgia, 'Times New Roman', serif",
-                fontWeight: 700, color: '#000', fontSize: '0.95rem',
-              }}>{file.name}</div>
-              <div style={{
-                fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
-                fontSize: '0.7rem', color: '#999', marginTop: '0.25rem',
-              }}>
-                {(file.size / 1024).toFixed(0)} KB · click to swap
+            {file ? (
+              <div>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                  background: '#FBF3E4', border: '1.5px solid var(--accent-gold)',
+                  borderRadius: 'var(--radius-sm)', padding: '0.35rem 0.75rem',
+                  marginBottom: '0.5rem',
+                }}>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--accent-gold)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>GPX</span>
+                </div>
+                <div style={{
+                  fontFamily: "'Raleway', sans-serif",
+                  fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.95rem',
+                  marginBottom: '0.2rem',
+                }}>{file.name}</div>
+                <div style={{
+                  fontFamily: "'Raleway', sans-serif",
+                  fontSize: '0.72rem', color: 'var(--text-muted)',
+                }}>
+                  {(file.size / 1024).toFixed(0)} KB · click to swap
+                </div>
               </div>
-            </div>
-          ) : (
-            <div>
-              <div style={{
-                fontFamily: "Georgia, 'Times New Roman', serif",
-                fontWeight: 700, fontSize: '1rem', color: '#000', marginBottom: '0.25rem',
-              }}>Drop your GPX file here</div>
-              <div style={{
-                fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
-                fontSize: '0.72rem', color: '#999', letterSpacing: '0.05em',
-              }}>or click to browse · .gpx .fit .tcx</div>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div>
+                <div style={{
+                  width: 44, height: 44,
+                  background: 'var(--bg-elevated)',
+                  borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 1rem',
+                  fontSize: '1.25rem',
+                }}>
+                  ↑
+                </div>
+                <div style={{
+                  fontFamily: "'Raleway', sans-serif",
+                  fontWeight: 700, fontSize: '1rem',
+                  color: 'var(--text-primary)', marginBottom: '0.3rem',
+                }}>Drop your GPX file here</div>
+                <div style={{
+                  fontFamily: "'Raleway', sans-serif",
+                  fontSize: '0.75rem', color: 'var(--text-muted)',
+                }}>or click to browse · .gpx .fit .tcx</div>
+              </div>
+            )}
+          </div>
+        </motion.div>
 
         {/* FTP + Weight */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+        <motion.div variants={fadeUp} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
           <div>
-            <label style={sansLabel}>FTP (Watts)</label>
+            <label style={labelStyle}>FTP (Watts)</label>
             <input type="number" value={ftp} onChange={e => setFtp(e.target.value)}
-              placeholder="250" min={50} max={700} style={inputStyle} />
+              placeholder="250" min={50} max={700} style={inputStyle}
+              onFocus={e => (e.currentTarget.style.borderColor = 'var(--accent-gold)')}
+              onBlur={e => (e.currentTarget.style.borderColor = 'var(--border-subtle)')} />
           </div>
           <div>
-            <label style={sansLabel}>Weight (kg)</label>
+            <label style={labelStyle}>Weight (kg)</label>
             <input type="number" value={weight} onChange={e => setWeight(e.target.value)}
-              placeholder="70" min={30} max={200} style={inputStyle} />
+              placeholder="70" min={30} max={200} style={inputStyle}
+              onFocus={e => (e.currentTarget.style.borderColor = 'var(--accent-gold)')}
+              onBlur={e => (e.currentTarget.style.borderColor = 'var(--border-subtle)')} />
           </div>
-        </div>
+        </motion.div>
 
         {/* Intensity */}
-        <div>
-          <label style={{ ...sansLabel, marginBottom: '0.75rem' }}>Ride Intensity</label>
+        <motion.div variants={fadeUp}>
+          <label style={{ ...labelStyle, marginBottom: '0.75rem' }}>Ride Intensity</label>
           <IntensitySlider value={intensity} onChange={setIntensity} />
-        </div>
+        </motion.div>
 
         {/* Schedule & Weather toggle */}
-        <div style={{ border: '2px solid #000' }}>
+        <motion.div variants={fadeUp} style={{
+          background: '#fff',
+          border: '1.5px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-md)',
+        }}>
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '0.75rem 1rem', gap: '0.75rem',
+            padding: '0.875rem 1.125rem', gap: '0.75rem',
           }}>
             <div>
               <div style={{
-                fontFamily: "Georgia, 'Times New Roman', serif",
-                fontWeight: 700, fontSize: '0.9rem', color: '#000',
+                fontFamily: "'Raleway', sans-serif",
+                fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)',
               }}>
                 Schedule &amp; Weather
               </div>
               <div style={{
-                fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
-                fontSize: '0.68rem', color: '#999', marginTop: 2,
+                fontFamily: "'Raleway', sans-serif",
+                fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2,
               }}>
                 {scheduleOn ? 'Weather forecast will be included' : 'Off — no weather tab'}
               </div>
@@ -216,45 +310,102 @@ export function UploadForm() {
 
           {scheduleOn && (
             <div style={{
-              padding: '0.75rem 1rem 1rem',
-              display: 'flex', flexDirection: 'column', gap: '0.65rem',
-              borderTop: '1px solid #ccc',
+              padding: '0.875rem 1.125rem 1.125rem',
+              display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem',
+              borderTop: '1px solid var(--border-subtle)',
             }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
-                <div>
-                  <label style={sansLabel}>Start Date</label>
-                  <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={sansLabel}>Start Time</label>
-                  <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} style={inputStyle} />
-                </div>
+              <div>
+                <label style={labelStyle}>Start Date</label>
+                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={inputStyle}
+                  onFocus={e => (e.currentTarget.style.borderColor = 'var(--accent-gold)')}
+                  onBlur={e => (e.currentTarget.style.borderColor = 'var(--border-subtle)')} />
               </div>
-
+              <div>
+                <label style={labelStyle}>Start Time</label>
+                <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} style={inputStyle}
+                  onFocus={e => (e.currentTarget.style.borderColor = 'var(--accent-gold)')}
+                  onBlur={e => (e.currentTarget.style.borderColor = 'var(--border-subtle)')} />
+              </div>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {error && (
-          <div style={{
-            border: '2px solid #000',
-            padding: '0.7rem 1rem',
-            fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
-            color: '#000',
+          <motion.div variants={fadeUp} style={{
+            border: '1.5px solid #C06050',
+            borderRadius: 'var(--radius-sm)',
+            padding: '0.75rem 1rem',
+            fontFamily: "'Raleway', sans-serif",
+            color: 'var(--accent-danger)',
             fontSize: '0.85rem',
-            background: '#f5f5f5',
+            background: '#F9EDEA',
           }}>
             {error}
-          </div>
+          </motion.div>
         )}
 
-        <button type="submit" className="btn btn-primary" disabled={!canSubmit}
-          style={{ fontSize: '0.78rem', padding: '0.9rem', letterSpacing: '0.1em' }}>
-          Analyse My Ride →
-        </button>
-      </form>
+        <motion.div variants={fadeUp}>
+          <button type="submit" className="btn btn-primary" disabled={!canSubmit}
+            style={{ width: '100%', fontSize: '0.8rem', padding: '1rem', letterSpacing: '0.12em' }}>
+            Analyse My Ride →
+          </button>
+        </motion.div>
+      </motion.form>
 
-      <SavedRidesList />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5, duration: 0.4 }}
+        style={{ width: '100%', maxWidth: '520px', marginTop: '2rem' }}
+      >
+        <SavedRidesList />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8, duration: 0.4 }}
+        style={{
+          marginTop: '3rem',
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.5rem',
+        }}
+      >
+        <p style={{
+          fontFamily: "'Raleway', sans-serif",
+          fontSize: '0.72rem',
+          fontWeight: 500,
+          color: 'var(--text-muted)',
+          lineHeight: 1.6,
+        }}>
+          No login needed — all data stays in your browser's local storage.{' '}
+          Open source,{' '}
+          <a
+            href="https://github.com/louistb/Carbmaps"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: 'var(--accent-gold)',
+              fontWeight: 700,
+              textDecoration: 'none',
+              borderBottom: '1px solid var(--accent-gold)',
+            }}
+          >
+            view the repository on GitHub
+          </a>
+          .
+        </p>
+        <p style={{
+          fontFamily: "'Raleway', sans-serif",
+          fontSize: '0.72rem',
+          fontWeight: 500,
+          color: 'var(--text-muted)',
+        }}>
+          Vibe coded by Slimshader 🥴 with love
+        </p>
+      </motion.div>
     </div>
   );
 }

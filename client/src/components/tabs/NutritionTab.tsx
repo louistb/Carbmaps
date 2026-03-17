@@ -7,7 +7,7 @@ import { NutritionMap } from '../RouteMap';
 
 interface Props { data: NutritionResult; routePoints: MapPoint[]; }
 
-const sans = "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif";
+const ral = "'Raleway', sans-serif";
 
 const NutritionTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -15,16 +15,18 @@ const NutritionTooltip = ({ active, payload, label }: any) => {
   return (
     <div style={{
       background: '#fff',
-      border: '2px solid #000',
+      border: '1.5px solid var(--border-subtle)',
+      borderRadius: 'var(--radius-md)',
       padding: '0.7rem 0.9rem',
-      fontFamily: sans,
+      fontFamily: ral,
       fontSize: '0.78rem',
       lineHeight: 1.8,
+      boxShadow: '0 4px 16px rgba(26,26,24,0.1)',
     }}>
-      <div style={{ color: '#000', fontWeight: 700, marginBottom: '0.15rem' }}>Hour {label}</div>
-      <div style={{ color: '#000' }}>{d?.carbsG}g carbs</div>
-      <div style={{ color: '#555' }}>{d?.fluidMl}ml fluid</div>
-      <div style={{ color: '#555' }}>{d?.sodiumMg}mg sodium</div>
+      <div style={{ color: 'var(--text-primary)', fontWeight: 700, marginBottom: '0.15rem' }}>Hour {label}</div>
+      <div style={{ color: 'var(--accent-gold)', fontWeight: 600 }}>{d?.carbsG}g carbs</div>
+      <div style={{ color: 'var(--text-muted)' }}>{d?.fluidMl}ml fluid</div>
+      <div style={{ color: 'var(--text-muted)' }}>{d?.sodiumMg}mg sodium</div>
     </div>
   );
 };
@@ -37,7 +39,7 @@ export function NutritionTab({ data, routePoints }: Props) {
   } = data;
 
   return (
-    <div style={{ padding: '1.5rem 2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div style={{ padding: '1.5rem 2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', background: 'var(--bg-base)' }}>
 
       {/* Big totals */}
       <div className="stats-grid">
@@ -54,46 +56,46 @@ export function NutritionTab({ data, routePoints }: Props) {
         ))}
       </div>
 
-      {/* Per-hour targets — clean black grid */}
+      {/* Per-hour targets */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-        gap: 0,
-        border: '2px solid #000',
+        gap: '1px',
+        background: 'var(--border-subtle)',
+        border: '1.5px solid var(--border-subtle)',
+        borderRadius: 'var(--radius-md)',
+        overflow: 'hidden',
       }}>
         {[
           { label: 'Carbs / hr',  value: `${carbsPerHour}g`                   },
           { label: 'Fluid / hr',  value: `${fluidPerHourMl}ml`                },
           { label: 'Sodium / hr', value: `${sodiumPerHourMg}mg`               },
           { label: 'Total Na',    value: `${totalSodiumMg.toLocaleString()}mg` },
-        ].map(({ label, value }, i, arr) => (
-          <div key={label} style={{
-            padding: '0.875rem 1rem',
-            borderRight: i < arr.length - 1 ? '1px solid #ccc' : 'none',
-          }}>
+        ].map(({ label, value }) => (
+          <div key={label} style={{ padding: '0.875rem 1rem', background: '#fff' }}>
             <div className="label" style={{ marginBottom: '0.25rem' }}>{label}</div>
-            <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 700, fontSize: '1.3rem', color: '#000' }}>{value}</div>
+            <div style={{ fontFamily: ral, fontWeight: 800, fontSize: '1.3rem', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{value}</div>
           </div>
         ))}
       </div>
 
       {/* Carbs bar chart */}
       <div className="card" style={{ padding: '1.25rem 1.25rem 0.5rem' }}>
-        <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 700, marginBottom: '0.2rem' }}>Carbs per Hour</div>
-        <div style={{ fontFamily: sans, fontSize: '0.75rem', color: '#999', marginBottom: '1rem' }}>
+        <div style={{ fontFamily: ral, fontWeight: 800, fontSize: '0.95rem', marginBottom: '0.2rem', color: 'var(--text-primary)' }}>Carbs per Hour</div>
+        <div style={{ fontFamily: ral, fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
           Hover for full breakdown · target {carbsPerHour}g/h
         </div>
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={hourlyPlan} margin={{ top: 4, right: 10, bottom: 0, left: -10 }} barSize={22}>
-            <CartesianGrid strokeDasharray="2 2" stroke="#ccc" vertical={false} />
-            <XAxis dataKey="hour" stroke="#ccc" tick={{ fill: '#999', fontSize: 11, fontFamily: sans }}
-              tickFormatter={v => `H${v}`} tickLine={false} axisLine={{ stroke: '#ccc' }} />
-            <YAxis stroke="#ccc" tick={{ fill: '#999', fontSize: 11, fontFamily: sans }}
+            <CartesianGrid strokeDasharray="2 2" stroke="var(--border-subtle)" vertical={false} />
+            <XAxis dataKey="hour" stroke="var(--border-subtle)" tick={{ fill: '#A8998C', fontSize: 11, fontFamily: ral }}
+              tickFormatter={v => `H${v}`} tickLine={false} axisLine={{ stroke: 'var(--border-subtle)' }} />
+            <YAxis stroke="var(--border-subtle)" tick={{ fill: '#A8998C', fontSize: 11, fontFamily: ral }}
               tickFormatter={v => `${v}g`} tickLine={false} axisLine={false} />
-            <Tooltip content={<NutritionTooltip />} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
-            <Bar dataKey="carbsG" radius={0}>
+            <Tooltip content={<NutritionTooltip />} cursor={{ fill: 'rgba(201,169,110,0.08)' }} />
+            <Bar dataKey="carbsG" radius={[2, 2, 0, 0]}>
               {hourlyPlan.map((_, i) => (
-                <Cell key={i} fill={i === hourlyPlan.length - 1 ? '#555' : '#000'} />
+                <Cell key={i} fill={i === hourlyPlan.length - 1 ? '#C8B89A' : '#C9A96E'} />
               ))}
             </Bar>
           </BarChart>
@@ -104,28 +106,28 @@ export function NutritionTab({ data, routePoints }: Props) {
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <div style={{
           padding: '0.875rem 1.25rem',
-          borderBottom: '2px solid #000',
-          fontFamily: "Georgia, 'Times New Roman', serif",
-          fontWeight: 700,
+          borderBottom: '1.5px solid var(--border-subtle)',
+          fontFamily: ral,
+          fontWeight: 800,
+          fontSize: '0.95rem',
+          color: 'var(--text-primary)',
+          background: 'var(--bg-elevated)',
         }}>
           Hourly Food Plan
         </div>
         {hourlyPlan.map((slot, idx) => (
           <div key={slot.hour} style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem',
-            padding: '0.7rem 1.25rem',
-            borderBottom: idx < hourlyPlan.length - 1 ? '1px solid #e5e5e5' : 'none',
+            display: 'flex', alignItems: 'center', gap: '1rem',
+            padding: '0.75rem 1.25rem',
+            borderBottom: idx < hourlyPlan.length - 1 ? '1px solid var(--border-subtle)' : 'none',
             flexWrap: 'wrap',
           }}>
-            {/* Square hour marker */}
             <div style={{
               width: '30px', height: '30px',
-              background: '#000',
+              background: 'var(--accent-gold)',
+              borderRadius: 'var(--radius-sm)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: sans,
-              fontWeight: 700, fontSize: '0.78rem', color: '#fff',
+              fontFamily: ral, fontWeight: 800, fontSize: '0.78rem', color: '#fff',
               flexShrink: 0,
             }}>
               {slot.hour}
@@ -133,17 +135,17 @@ export function NutritionTab({ data, routePoints }: Props) {
             <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', flex: 1 }}>
               {slot.suggestions.map((s, i) => (
                 <span key={i} style={{
-                  background: '#f5f5f5',
-                  border: '1px solid #ccc',
-                  padding: '0.18rem 0.6rem',
-                  fontFamily: sans,
-                  fontSize: '0.78rem', color: '#000',
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '0.2rem 0.6rem',
+                  fontFamily: ral, fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500,
                 }}>
                   {s}
                 </span>
               ))}
             </div>
-            <div style={{ fontFamily: sans, fontSize: '0.73rem', color: '#999', whiteSpace: 'nowrap' }}>
+            <div style={{ fontFamily: ral, fontSize: '0.73rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', fontWeight: 500 }}>
               {slot.carbsG}g · {slot.fluidMl}ml
             </div>
           </div>
@@ -154,9 +156,9 @@ export function NutritionTab({ data, routePoints }: Props) {
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <div style={{
           padding: '0.875rem 1.25rem',
-          borderBottom: '2px solid #000',
-          fontFamily: "Georgia, 'Times New Roman', serif",
-          fontWeight: 700,
+          borderBottom: '1.5px solid var(--border-subtle)',
+          fontFamily: ral, fontWeight: 800, fontSize: '0.95rem',
+          color: 'var(--text-primary)', background: 'var(--bg-elevated)',
         }}>
           Restaurants &amp; Cafés Near Route
         </div>
@@ -165,7 +167,7 @@ export function NutritionTab({ data, routePoints }: Props) {
         </div>
       </div>
 
-      <div style={{ fontFamily: sans, fontSize: '0.73rem', color: '#999' }}>
+      <div style={{ fontFamily: ral, fontSize: '0.73rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
         Targets based on evidence-backed guidelines (60–90g carbs/h, 625ml fluid/h, 600mg sodium/h). Gut-train in training before race day.
       </div>
     </div>
