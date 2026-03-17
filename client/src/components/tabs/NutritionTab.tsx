@@ -2,9 +2,10 @@ import React from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
-import { NutritionResult } from '../../types/analysis';
+import { NutritionResult, MapPoint } from '../../types/analysis';
+import { NutritionMap } from '../RouteMap';
 
-interface Props { data: NutritionResult; }
+interface Props { data: NutritionResult; routePoints: MapPoint[]; }
 
 const sans = "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif";
 
@@ -28,7 +29,7 @@ const NutritionTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-export function NutritionTab({ data }: Props) {
+export function NutritionTab({ data, routePoints }: Props) {
   const {
     totalKcal, totalCarbsG, totalFluidMl, totalSodiumMg,
     carbsPerHour, fluidPerHourMl, sodiumPerHourMg,
@@ -147,6 +148,21 @@ export function NutritionTab({ data }: Props) {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Restaurants near route */}
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div style={{
+          padding: '0.875rem 1.25rem',
+          borderBottom: '2px solid #000',
+          fontFamily: "Georgia, 'Times New Roman', serif",
+          fontWeight: 700,
+        }}>
+          Restaurants &amp; Cafés Near Route
+        </div>
+        <div style={{ padding: '1rem 1.25rem' }}>
+          <NutritionMap points={routePoints} />
+        </div>
       </div>
 
       <div style={{ fontFamily: sans, fontSize: '0.73rem', color: '#999' }}>

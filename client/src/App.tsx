@@ -28,7 +28,7 @@ function ResultsView() {
         <motion.div key={activeTab} variants={tabVariants} initial="initial" animate="animate" exit="exit">
           {activeTab === 'pacing'    && <PacingTab    data={result.pacing}    routePoints={result.routePoints ?? []} />}
           {activeTab === 'climbs'    && <ClimbsTab    data={result.climbs}    routePoints={result.routePoints ?? []} />}
-          {activeTab === 'nutrition' && <NutritionTab data={result.nutrition} />}
+          {activeTab === 'nutrition' && <NutritionTab data={result.nutrition} routePoints={result.routePoints ?? []} />}
           {activeTab === 'weather'   && result.weather && <WeatherTab data={result.weather} />}
         </motion.div>
       </AnimatePresence>

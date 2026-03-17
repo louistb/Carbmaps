@@ -87,10 +87,10 @@ export function Header() {
         <IntensitySlider value={intensity} onChange={handleChange} compact step={0.5} />
       </div>
 
-      <div style={{ flexShrink: 0 }}>
+      <div style={{ flexShrink: 0, marginLeft: 'auto' }}>
         <button className="btn btn-ghost" onClick={reset}
           style={{ fontSize: '0.72rem', padding: '0.4rem 0.9rem' }}>
-          ← New Ride
+          ← Home
         </button>
       </div>
     </header>

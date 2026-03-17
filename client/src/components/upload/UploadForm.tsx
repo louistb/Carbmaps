@@ -3,7 +3,6 @@ import { useAnalysis } from '../../hooks/useAnalysis';
 import { useAnalysisStore } from '../../store/analysisStore';
 import { SavedRidesList } from './SavedRidesList';
 import { IntensitySlider } from '../IntensitySlider';
-import { LocationInput } from '../LocationInput';
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -65,7 +64,6 @@ export function UploadForm() {
   const [scheduleOn, setScheduleOn] = useState(false);
   const [startDate, setStartDate]   = useState('');
   const [startTime, setStartTime]   = useState('09:00');
-  const [location, setLocation]     = useState('');
   const [dragging, setDragging]     = useState(false);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -88,7 +86,6 @@ export function UploadForm() {
       const startDateTime = new Date(`${startDate}T${startTime}:00`).toISOString();
       fd.append('startDateTime', startDateTime);
     }
-    if (location.trim()) fd.append('location', location.trim());
     await analyze(fd);
   };
 
@@ -233,13 +230,7 @@ export function UploadForm() {
                   <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} style={inputStyle} />
                 </div>
               </div>
-              <div>
-                <label style={sansLabel}>
-                  Start Location
-                  <span style={{ color: '#ccc', fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: 6 }}>optional</span>
-                </label>
-                <LocationInput value={location} onChange={setLocation} />
-              </div>
+
             </div>
           )}
         </div>
