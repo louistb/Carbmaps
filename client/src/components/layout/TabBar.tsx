@@ -1,11 +1,11 @@
 import React from 'react';
 import { useAnalysisStore, TabId } from '../../store/analysisStore';
 
-const ALL_TABS: { id: TabId; label: string; color: string }[] = [
-  { id: 'pacing',    label: '🚴 Pacing',    color: '#e8521e' },
-  { id: 'climbs',    label: '⛰️ Climbs',    color: '#65a30d' },
-  { id: 'nutrition', label: '🍌 Nutrition', color: '#d97706' },
-  { id: 'weather',   label: '🌤️ Weather',   color: '#0284c7' },
+const ALL_TABS: { id: TabId; label: string }[] = [
+  { id: 'pacing',    label: 'Pacing'    },
+  { id: 'climbs',    label: 'Climbs'    },
+  { id: 'nutrition', label: 'Nutrition' },
+  { id: 'weather',   label: 'Weather'   },
 ];
 
 export function TabBar() {
@@ -14,8 +14,8 @@ export function TabBar() {
 
   return (
     <nav style={{
-      background: 'var(--bg-surface)',
-      borderBottom: '1px solid var(--border-subtle)',
+      background: '#fff',
+      borderBottom: '2px solid #000',
       padding: '0 1.5rem',
       display: 'flex',
       gap: 0,
@@ -28,15 +28,18 @@ export function TabBar() {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             style={{
-              background: 'none',
+              background: isActive ? '#000' : 'transparent',
               border: 'none',
-              borderBottom: isActive ? `2px solid ${tab.color}` : '2px solid transparent',
-              color: isActive ? tab.color : 'var(--text-secondary)',
-              padding: '0.8rem 1.2rem',
-              fontSize: '0.855rem',
-              fontWeight: isActive ? 700 : 400,
+              borderRight: '1px solid #ccc',
+              color: isActive ? '#fff' : '#999',
+              padding: '0.75rem 1.5rem',
+              fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
               cursor: 'pointer',
-              transition: 'all 0.14s ease',
+              transition: 'all 0.1s ease',
               whiteSpace: 'nowrap',
             }}
           >

@@ -4,24 +4,19 @@ import { ClimbsMap } from '../RouteMap';
 
 interface Props { data: ClimbsResult; routePoints: MapPoint[]; }
 
+const sans = "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif";
+
 function formatTime(min: number): string {
   const h = Math.floor(min / 60);
   const m = Math.round(min % 60);
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
-function severityColor(avg: number): string {
-  if (avg >= 10) return '#e05b5b';
-  if (avg >= 7)  return '#e07b39';
-  if (avg >= 5)  return '#f5a623';
-  return '#4caf7d';
-}
-
 function severityLabel(avg: number): string {
   if (avg >= 10) return 'Brutal';
   if (avg >= 7)  return 'Hard';
   if (avg >= 5)  return 'Moderate';
-  return 'Manageable';
+  return 'Easy';
 }
 
 export function ClimbsTab({ data, routePoints }: Props) {
@@ -31,128 +26,111 @@ export function ClimbsTab({ data, routePoints }: Props) {
   if (climbs.length === 0) {
     return (
       <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
-        <div style={{ fontSize: '4rem', marginBottom: '1rem', opacity: 0.6 }}>🏔️</div>
-        <div style={{ fontWeight: 700, fontSize: '1.3rem', marginBottom: '0.5rem' }}>No significant climbs</div>
-        <div style={{ color: 'var(--text-secondary)', maxWidth: '320px', margin: '0 auto' }}>
-          No sustained gradients ≥4% over 500m. Enjoy the flat — your legs will thank you.
+        <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 700, fontSize: '1.3rem', marginBottom: '0.5rem' }}>
+          No significant climbs
+        </div>
+        <div style={{ fontFamily: sans, color: '#999', maxWidth: '320px', margin: '0 auto' }}>
+          No sustained gradients ≥4% over 500m. Enjoy the flat.
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '1.5rem 2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-        {climbs.length} climb{climbs.length > 1 ? 's' : ''} detected · gradients ≥4% sustained over ≥500m
+    <div style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+      <div style={{ fontFamily: sans, color: '#999', fontSize: '0.75rem' }}>
+        {climbs.length} climb{climbs.length > 1 ? 's' : ''} · gradients ≥4% over ≥500m
       </div>
 
-      {/* Map */}
-      {routePoints.length >= 2 && (
-        <div style={{ border: '1px solid var(--border-subtle)' }}>
-          <ClimbsMap points={routePoints} climbs={climbs} hoveredClimbIdx={hoveredClimbIdx} />
-        </div>
-      )}
+      {/* Split layout: list left, map right */}
+      <div style={{ display: 'flex', gap: 0, alignItems: 'stretch', border: '2px solid #000' }}>
 
-      {climbs.map((climb, idx) => {
-        const color = severityColor(climb.avgGradientPct);
-        const label = severityLabel(climb.avgGradientPct);
-        const fillPct = Math.min(climb.avgGradientPct / 15 * 100, 100);
-        const maxFillPct = Math.min(climb.maxGradientPct / 15 * 100, 100);
+        {/* Climb list — left column, scrollable */}
+        <div style={{
+          width: '260px',
+          flexShrink: 0,
+          borderRight: '2px solid #000',
+          overflowY: 'auto',
+          maxHeight: '420px',
+        }}>
+          {climbs.map((climb, idx) => {
+            const fillPct    = Math.min(climb.avgGradientPct / 15 * 100, 100);
+            const maxFillPct = Math.min(climb.maxGradientPct / 15 * 100, 100);
+            const isHovered  = hoveredClimbIdx === idx;
 
-        return (
-          <div
-            key={climb.climbNumber}
-            onMouseEnter={() => setHoveredClimbIdx(idx)}
-            onMouseLeave={() => setHoveredClimbIdx(null)}
-            style={{
-              background: 'var(--bg-surface)',
-              border: `1px solid ${color}33`,
-              borderLeft: `4px solid ${color}`,
-              overflow: 'hidden',
-            }}>
-            {/* Header row */}
-            <div style={{
-              padding: '1.25rem 1.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '1rem',
-              flexWrap: 'wrap',
-            }}>
-              <div>
-                <div style={{ fontWeight: 800, fontSize: '1.15rem', marginBottom: '0.15rem' }}>
-                  {climb.name}
+            return (
+              <div
+                key={climb.climbNumber}
+                onMouseEnter={() => setHoveredClimbIdx(idx)}
+                onMouseLeave={() => setHoveredClimbIdx(null)}
+                style={{
+                  padding: '0.65rem 0.875rem',
+                  borderBottom: idx < climbs.length - 1 ? '1px solid #e5e5e5' : 'none',
+                  background: isHovered ? '#f5f5f5' : '#fff',
+                  cursor: 'default',
+                  transition: 'background 0.1s',
+                }}
+              >
+                {/* Name + badge row */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.2rem', gap: '0.5rem' }}>
+                  <div style={{
+                    fontFamily: "Georgia, 'Times New Roman', serif",
+                    fontWeight: 700, fontSize: '0.88rem', color: '#000',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
+                    {climb.name}
+                  </div>
+                  <span style={{
+                    fontFamily: sans, fontSize: '0.58rem', fontWeight: 700,
+                    letterSpacing: '0.06em', textTransform: 'uppercase',
+                    border: '1px solid #000', padding: '0.1rem 0.35rem',
+                    flexShrink: 0,
+                  }}>
+                    {severityLabel(climb.avgGradientPct)}
+                  </span>
                 </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  Starts at km {climb.startKm.toFixed(1)} · {climb.lengthKm.toFixed(1)} km long
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '3rem', fontWeight: 900, lineHeight: 1, color }}>
+
+                {/* Grade + distance */}
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                  <span style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 700, fontSize: '1.3rem', lineHeight: 1 }}>
                     {climb.avgGradientPct.toFixed(1)}%
-                  </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                    avg grade
-                  </div>
+                  </span>
+                  <span style={{ fontFamily: sans, fontSize: '0.68rem', color: '#999' }}>
+                    avg · {climb.lengthKm.toFixed(1)}km · +{climb.elevationGainM}m
+                  </span>
                 </div>
-                <span style={{
-                  background: `${color}20`,
-                  color,
-                  border: `1px solid ${color}40`,
-                  borderRadius: '999px',
-                  padding: '0.25rem 0.7rem',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.05em',
-                  textTransform: 'uppercase',
-                  alignSelf: 'center',
-                }}>
-                  {label}
-                </span>
-              </div>
-            </div>
 
-            {/* Gradient bars */}
-            <div style={{ padding: '0 1.5rem 1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
-                <span>Avg {climb.avgGradientPct.toFixed(1)}%</span>
-                <span>Max {climb.maxGradientPct.toFixed(1)}%</span>
-              </div>
-              <div style={{ height: '8px', background: 'var(--bg-elevated)', borderRadius: '999px', overflow: 'hidden', marginBottom: '6px' }}>
-                <div style={{ height: '100%', width: `${fillPct}%`, background: color, borderRadius: '999px', opacity: 0.9 }} />
-              </div>
-              <div style={{ height: '4px', background: 'var(--bg-elevated)', borderRadius: '999px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${maxFillPct}%`, background: color, borderRadius: '999px', opacity: 0.5 }} />
-              </div>
-            </div>
-
-            {/* Stats grid */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
-              gap: 0,
-              borderTop: '1px solid var(--border-subtle)',
-            }}>
-              {[
-                { label: 'Elevation', value: `+${climb.elevationGainM}m` },
-                { label: 'Duration',  value: formatTime(climb.estimatedDurationMin) },
-                { label: 'Target Power', value: `${climb.suggestedPowerW}W` },
-                { label: '% FTP',     value: `${climb.suggestedPowerPct.toFixed(0)}%` },
-              ].map(({ label, value }, i, arr) => (
-                <div key={label} style={{
-                  padding: '0.875rem 1.25rem',
-                  borderRight: i < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-                  textAlign: 'center',
-                }}>
-                  <div className="label" style={{ marginBottom: '0.2rem' }}>{label}</div>
-                  <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>{value}</div>
+                {/* Compact gradient bars */}
+                <div style={{ height: '5px', background: '#f0f0f0', overflow: 'hidden', marginBottom: '3px' }}>
+                  <div style={{ height: '100%', width: `${fillPct}%`, background: '#000' }} />
                 </div>
-              ))}
-            </div>
+                <div style={{ height: '3px', background: '#f0f0f0', overflow: 'hidden', marginBottom: '0.4rem' }}>
+                  <div style={{ height: '100%', width: `${maxFillPct}%`, background: '#aaa' }} />
+                </div>
+
+                {/* Stats inline */}
+                <div style={{ display: 'flex', gap: '0.75rem', fontFamily: sans, fontSize: '0.68rem', color: '#555' }}>
+                  <span>{formatTime(climb.estimatedDurationMin)}</span>
+                  <span>{climb.suggestedPowerW}W</span>
+                  <span>{climb.suggestedPowerPct.toFixed(0)}% FTP</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Map — right, fills remaining space */}
+        {routePoints.length >= 2 ? (
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <ClimbsMap points={routePoints} climbs={climbs} hoveredClimbIdx={hoveredClimbIdx} />
           </div>
-        );
-      })}
+        ) : (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc', fontFamily: sans, fontSize: '0.8rem' }}>
+            No map data
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -8,13 +8,14 @@ function formatTime(minutes: number): string {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
+// Greyscale intensity — dark = harder
 function intensityColor(pct: number): string {
-  if (pct < 55) return '#3a6fa8';
-  if (pct < 65) return '#2a7a5a';
-  if (pct < 75) return '#5a9a2a';
-  if (pct < 85) return '#b88a10';
-  if (pct < 95) return '#c86030';
-  return '#b83030';
+  if (pct < 55) return '#d8d8d8';
+  if (pct < 65) return '#b0b0b0';
+  if (pct < 75) return '#808080';
+  if (pct < 85) return '#484848';
+  if (pct < 95) return '#242424';
+  return '#000000';
 }
 
 function intensityLabel(pct: number): string {
@@ -27,12 +28,12 @@ function intensityLabel(pct: number): string {
 }
 
 const ZONES = [
-  { label: 'Recovery',   color: '#3a6fa8', range: '<55%' },
-  { label: 'Endurance',  color: '#2a7a5a', range: '55–65%' },
-  { label: 'Tempo',      color: '#5a9a2a', range: '65–75%' },
-  { label: 'Sweet Spot', color: '#b88a10', range: '75–85%' },
-  { label: 'Threshold',  color: '#c86030', range: '85–95%' },
-  { label: 'VO2max+',    color: '#b83030', range: '>95%' },
+  { label: 'Recovery',   color: '#d8d8d8', range: '<55%' },
+  { label: 'Endurance',  color: '#b0b0b0', range: '55–65%' },
+  { label: 'Tempo',      color: '#808080', range: '65–75%' },
+  { label: 'Sweet Spot', color: '#484848', range: '75–85%' },
+  { label: 'Threshold',  color: '#242424', range: '85–95%' },
+  { label: 'VO2max+',    color: '#000000', range: '>95%' },
 ];
 
 function PacingTimeline({ segments, onHoverKm }: { segments: SegmentPacing[]; onHoverKm: (km: number | null) => void }) {
@@ -77,20 +78,14 @@ function PacingTimeline({ segments, onHoverKm }: { segments: SegmentPacing[]; on
   return (
     <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
 
-      {/* Elevation silhouette */}
+      {/* Elevation silhouette — black stroke, light grey fill */}
       {hasElev && (
         <svg
           viewBox={`0 0 1000 ${SVG_H}`}
           preserveAspectRatio="none"
           style={{ display: 'block', width: '100%', height: SVG_H, marginBottom: 6 }}
         >
-          <defs>
-            <linearGradient id="eg" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor="#e8521e" stopOpacity={0.2} />
-              <stop offset="100%" stopColor="#e8521e" stopOpacity={0.02} />
-            </linearGradient>
-          </defs>
-          <path d={elevPathD} fill="url(#eg)" stroke="#e8521e" strokeWidth={1.5} />
+          <path d={elevPathD} fill="#ebebeb" stroke="#000" strokeWidth={1.5} />
         </svg>
       )}
 
@@ -105,7 +100,7 @@ function PacingTimeline({ segments, onHoverKm }: { segments: SegmentPacing[]; on
               transform: 'translateX(-50%)',
               fontSize: 9,
               fontWeight: 800,
-              color: '#d97706',
+              color: '#000',
               lineHeight: 1,
             }}>
               ▼
@@ -114,7 +109,7 @@ function PacingTimeline({ segments, onHoverKm }: { segments: SegmentPacing[]; on
         })}
       </div>
 
-      {/* Intensity blocks — absolutely positioned to prevent overflow */}
+      {/* Intensity blocks */}
       <div style={{ position: 'relative', width: '100%', height: 38, overflow: 'hidden' }}>
         {segments.map((seg, i) => {
           const leftPct  = (seg.startKm / totalKm) * 100;
@@ -132,8 +127,8 @@ function PacingTimeline({ segments, onHoverKm }: { segments: SegmentPacing[]; on
                 left: `${leftPct}%`,
                 width: `${widthPct}%`,
                 background: color,
-                borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.3)' : 'none',
-                borderTop: seg.flag === 'hold-back' ? '3px solid #d97706' : '3px solid transparent',
+                borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.2)' : 'none',
+                borderTop: seg.flag === 'hold-back' ? '3px solid #000' : '3px solid transparent',
                 cursor: 'default',
               }}
             />
@@ -153,8 +148,8 @@ function PacingTimeline({ segments, onHoverKm }: { segments: SegmentPacing[]; on
             alignItems: 'center',
             gap: 2,
           }}>
-            <div style={{ width: 1, height: 4, background: 'var(--border-strong)' }} />
-            <span style={{ fontSize: 10, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{km}km</span>
+            <div style={{ width: 1, height: 4, background: '#000' }} />
+            <span style={{ fontSize: 10, color: '#555', whiteSpace: 'nowrap' }}>{km}km</span>
           </div>
         ))}
       </div>
@@ -170,34 +165,35 @@ function PacingTimeline({ segments, onHoverKm }: { segments: SegmentPacing[]; on
             position: 'absolute',
             top: Math.max(0, y - 8),
             left,
-            background: '#ffffff',
-            border: '1px solid #e5e0d8',
+            background: '#fff',
+            border: '2px solid #000',
             padding: '0.65rem 0.9rem',
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
             fontSize: '0.78rem',
             lineHeight: 1.8,
             minWidth: ttW,
             pointerEvents: 'none',
-            zIndex: 20,
+            zIndex: 1000,
           }}>
-            <div style={{ fontWeight: 700, color: '#6b6560', marginBottom: 2 }}>
+            <div style={{ fontWeight: 700, color: '#000', marginBottom: 2 }}>
               {seg.startKm.toFixed(1)}–{seg.endKm.toFixed(1)} km
             </div>
-            <div style={{ fontWeight: 700, color: '#e8521e' }}>
+            <div style={{ fontWeight: 700, color: '#000' }}>
               {seg.targetPowerW}W
-              <span style={{ fontWeight: 400, color: '#6b6560', marginLeft: 4 }}>
+              <span style={{ fontWeight: 400, color: '#555', marginLeft: 4 }}>
                 ({seg.targetPowerPct.toFixed(1)}% FTP)
               </span>
             </div>
-            <div style={{ color: intensityColor(seg.targetPowerPct), fontWeight: 600 }}>
+            <div style={{ color: '#555', fontWeight: 600 }}>
               {intensityLabel(seg.targetPowerPct)}
             </div>
             {seg.gradient !== 0 && (
-              <div style={{ color: seg.gradient > 4 ? '#e8521e' : seg.gradient < 0 ? '#0284c7' : '#6b6560' }}>
+              <div style={{ color: '#000' }}>
                 {seg.gradient > 0 ? `↗ +${seg.gradient}%` : `↘ ${seg.gradient}%`}
               </div>
             )}
             {seg.flag === 'hold-back' && (
-              <div style={{ fontWeight: 700, color: '#d97706', marginTop: 2 }}>⚠ Hold back</div>
+              <div style={{ fontWeight: 700, color: '#000', marginTop: 2 }}>▼ Hold back</div>
             )}
           </div>
         );
@@ -222,34 +218,30 @@ export function PacingTab({ data, routePoints }: { data: PacingResult; routePoin
       <div style={{
         display: 'flex',
         gap: 0,
-        background: 'var(--bg-elevated)',
-        border: '1px solid var(--border-subtle)',
-        borderRadius: 12,
+        border: '2px solid #000',
         overflow: 'hidden',
       }}>
         {[
-          { label: 'Normalized Power', value: `${normalizedPowerW}W`, accent: true },
+          { label: 'Normalized Power', value: `${normalizedPowerW}W`, bold: true },
           { label: 'Intensity Factor',  value: intensityFactor.toFixed(2) },
           { label: 'TSS',               value: String(tss) },
           { label: 'Duration',          value: formatTime(estimatedTotalTimeMin) },
-        ].map(({ label, value, accent }, i, arr) => (
+        ].map(({ label, value, bold }, i, arr) => (
           <div key={label} style={{
             flex: 1,
             padding: '0.9rem 1.1rem',
-            borderRight: i < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+            borderRight: i < arr.length - 1 ? '1px solid #ccc' : 'none',
             display: 'flex',
             flexDirection: 'column',
             gap: 3,
           }}>
-            <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)' }}>
+            <span style={{
+              fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+              fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#999',
+            }}>
               {label}
             </span>
-            <span style={{
-              fontSize: '1.25rem',
-              fontWeight: 800,
-              color: accent ? 'var(--accent-primary)' : 'var(--text-primary)',
-              letterSpacing: '-0.02em',
-            }}>
+            <span style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: '1.25rem', fontWeight: 700, color: '#000', letterSpacing: '-0.02em' }}>
               {value}
             </span>
           </div>
@@ -259,15 +251,15 @@ export function PacingTab({ data, routePoints }: { data: PacingResult; routePoin
       {/* Target zone */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <span style={{
-          display: 'inline-flex', alignItems: 'center', gap: 5,
-          background: 'rgba(232,82,30,0.08)',
-          border: '1px solid rgba(232,82,30,0.22)',
-          padding: '0.28rem 0.8rem',
-          fontSize: '0.76rem', fontWeight: 700, color: 'var(--accent-primary)',
+          display: 'inline-flex', alignItems: 'center',
+          border: '2px solid #000',
+          padding: '0.2rem 0.75rem',
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+          fontSize: '0.7rem', fontWeight: 700, color: '#000', letterSpacing: '0.06em', textTransform: 'uppercase',
         }}>
-          🎯 {targetZoneLabel}
+          {targetZoneLabel}
         </span>
-        <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+        <span style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif", color: '#999', fontSize: '0.8rem' }}>
           {targetZonePctLow}–{targetZonePctHigh}% FTP
         </span>
       </div>
@@ -280,28 +272,28 @@ export function PacingTab({ data, routePoints }: { data: PacingResult; routePoin
           alignItems: 'baseline',
           marginBottom: '1.1rem',
           paddingBottom: '0.7rem',
-          borderBottom: '1px solid var(--border-subtle)',
+          borderBottom: '2px solid #000',
         }}>
           <div>
-            <div style={{ fontWeight: 800, fontSize: '0.95rem', letterSpacing: '-0.01em' }}>
+            <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 700, fontSize: '0.95rem' }}>
               Intensity Timeline
             </div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: 3 }}>
+            <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: '0.72rem', color: '#999', marginTop: 3 }}>
               {segments.length} segments · hover for details
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.85rem', fontSize: '0.73rem' }}>
-            {holdBackCount > 0 && (
-              <span style={{ color: '#d97706', fontWeight: 600 }}>▼ {holdBackCount} hold-back</span>
-            )}
-          </div>
+          {holdBackCount > 0 && (
+            <span style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif", color: '#000', fontWeight: 600, fontSize: '0.73rem' }}>
+              ▼ {holdBackCount} hold-back
+            </span>
+          )}
         </div>
 
         <PacingTimeline segments={segments} onHoverKm={setHoveredKm} />
 
         {/* Map */}
         {routePoints.length >= 2 && (
-          <div style={{ marginTop: '1.25rem', border: '1px solid var(--border-subtle)' }}>
+          <div style={{ marginTop: '1.25rem', border: '2px solid #000' }}>
             <PacingMap points={routePoints} segments={segments} hoveredKm={hoveredKm} />
           </div>
         )}
@@ -310,16 +302,16 @@ export function PacingTab({ data, routePoints }: { data: PacingResult; routePoin
         <div style={{
           display: 'flex',
           flexWrap: 'wrap',
-          gap: '0.4rem 0.8rem',
+          gap: '0.4rem 1rem',
           marginTop: '1.1rem',
           paddingTop: '0.9rem',
-          borderTop: '1px solid var(--border-subtle)',
+          borderTop: '1px solid #ccc',
         }}>
           {ZONES.map(({ label, color, range }) => (
-            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 10, height: 10, background: color, flexShrink: 0 }} />
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-primary)', fontWeight: 600 }}>{label}</span>
-              <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{range}</span>
+            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 12, height: 12, background: color, border: '1px solid #ccc', flexShrink: 0 }} />
+              <span style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: '0.68rem', color: '#000', fontWeight: 600 }}>{label}</span>
+              <span style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: '0.65rem', color: '#999' }}>{range}</span>
             </div>
           ))}
         </div>

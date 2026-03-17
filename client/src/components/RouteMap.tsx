@@ -5,20 +5,22 @@ import { MapPoint, SegmentPacing, ClimbData } from '../types/analysis';
 
 // ── Colour helpers ────────────────────────────────────────────────────────────
 
+// Greyscale: light = easy, dark = hard
 function effortColor(pct: number): string {
-  if (pct < 55) return '#3a6fa8';
-  if (pct < 65) return '#2a7a5a';
-  if (pct < 75) return '#5a9a2a';
-  if (pct < 85) return '#b88a10';
-  if (pct < 95) return '#c86030';
-  return '#b83030';
+  if (pct < 55) return '#d8d8d8';
+  if (pct < 65) return '#b0b0b0';
+  if (pct < 75) return '#808080';
+  if (pct < 85) return '#484848';
+  if (pct < 95) return '#242424';
+  return '#000000';
 }
 
+// Greyscale elevation shading
 function elevColor(t: number): string {
-  if (t < 0.25) return '#3a6fa8';
-  if (t < 0.55) return '#5a9a2a';
-  if (t < 0.80) return '#b88a10';
-  return '#b83030';
+  if (t < 0.25) return '#d0d0d0';
+  if (t < 0.55) return '#909090';
+  if (t < 0.80) return '#505050';
+  return '#202020';
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -92,7 +94,7 @@ export function PacingMap({ points, segments, hoveredKm }: PacingMapProps) {
     const pt = closestPoint(points, hoveredKm);
     markerRef.current = L.circleMarker([pt.lat, pt.lon], {
       radius: 7,
-      fillColor: '#e8521e',
+      fillColor: '#000000',
       color: '#ffffff',
       weight: 2,
       fillOpacity: 1,
@@ -103,7 +105,7 @@ export function PacingMap({ points, segments, hoveredKm }: PacingMapProps) {
   return <div ref={ref} style={{ width: '100%', height: 260 }} />;
 }
 
-// ── ClimbsMap ─────────────────────────────────────────────────────────────────
+// ── ClimbsMap ──────────────────────────────────────────────────────────────────
 
 interface ClimbsMapProps {
   points: MapPoint[];
@@ -154,7 +156,7 @@ export function ClimbsMap({ points, climbs, hoveredClimbIdx }: ClimbsMapProps) {
       const pt = closestPoint(points, climb.startKm);
       L.circleMarker([pt.lat, pt.lon], {
         radius: 5,
-        fillColor: '#e8521e',
+        fillColor: '#000000',
         color: '#fff',
         weight: 1.5,
         fillOpacity: 1,
@@ -186,7 +188,7 @@ export function ClimbsMap({ points, climbs, hoveredClimbIdx }: ClimbsMapProps) {
     const pts = pointsBetween(points, climb.startKm, climb.startKm + climb.lengthKm);
     if (pts.length >= 2) {
       highlightRef.current = L.polyline(pts.map(p => [p.lat, p.lon] as L.LatLngTuple), {
-        color: '#e8521e',
+        color: '#000000',
         weight: 6,
         opacity: 1,
       }).addTo(map);
@@ -195,7 +197,7 @@ export function ClimbsMap({ points, climbs, hoveredClimbIdx }: ClimbsMapProps) {
     const pt = closestPoint(points, climb.startKm);
     markerRef.current = L.circleMarker([pt.lat, pt.lon], {
       radius: 9,
-      fillColor: '#e8521e',
+      fillColor: '#000000',
       color: '#ffffff',
       weight: 2.5,
       fillOpacity: 1,
@@ -203,5 +205,5 @@ export function ClimbsMap({ points, climbs, hoveredClimbIdx }: ClimbsMapProps) {
   }, [hoveredClimbIdx, points, climbs]);
 
   if (points.length < 2) return null;
-  return <div ref={ref} style={{ width: '100%', height: 260 }} />;
+  return <div ref={ref} style={{ width: '100%', height: '100%', minHeight: 260 }} />;
 }

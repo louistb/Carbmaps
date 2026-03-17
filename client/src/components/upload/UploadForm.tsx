@@ -2,20 +2,29 @@ import React, { useRef, useState, useCallback } from 'react';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { useAnalysisStore } from '../../store/analysisStore';
 import { SavedRidesList } from './SavedRidesList';
-import { CarbMapLogo } from '../CarbMapLogo';
 import { IntensitySlider } from '../IntensitySlider';
 import { LocationInput } from '../LocationInput';
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  background: 'var(--bg-elevated)',
-  border: '1px solid var(--border-strong)',
-  borderRadius: 'var(--radius-md)',
-  padding: '0.65rem 1rem',
-  color: 'var(--text-primary)',
-  fontSize: '0.9rem',
+  background: '#fff',
+  border: '2px solid #000',
+  padding: '0.65rem 0.9rem',
+  color: '#000',
+  fontFamily: "Georgia, 'Times New Roman', serif",
+  fontSize: '0.95rem',
   outline: 'none',
-  transition: 'border-color 0.14s',
+};
+
+const sansLabel: React.CSSProperties = {
+  fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+  fontSize: '0.62rem',
+  fontWeight: 700,
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  color: '#999',
+  display: 'block',
+  marginBottom: '0.35rem',
 };
 
 function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
@@ -25,20 +34,20 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
       onClick={onToggle}
       style={{
         width: 40, height: 22,
-        border: 'none',
-        background: on ? 'var(--accent-primary)' : 'var(--border-strong)',
+        border: '2px solid #000',
+        background: on ? '#000' : '#fff',
         cursor: 'pointer',
         position: 'relative',
-        transition: 'background 0.18s',
+        transition: 'background 0.14s',
         flexShrink: 0,
       }}
     >
       <span style={{
         position: 'absolute',
-        top: 3, left: on ? 21 : 3,
-        width: 16, height: 16,
-        background: '#fff',
-        transition: 'left 0.18s',
+        top: 3, left: on ? 19 : 3,
+        width: 12, height: 12,
+        background: on ? '#fff' : '#000',
+        transition: 'left 0.14s',
       }} />
     </button>
   );
@@ -49,15 +58,15 @@ export function UploadForm() {
   const { error } = useAnalysisStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [file, setFile]               = useState<File | null>(null);
-  const [ftp, setFtp]                 = useState(() => localStorage.getItem('carbmap_ftp') ?? '');
-  const [weight, setWeight]           = useState(() => localStorage.getItem('carbmap_weight') ?? '');
-  const [intensity, setIntensity]     = useState(70); // 70% FTP = Endurance
-  const [scheduleOn, setScheduleOn]   = useState(false);
-  const [startDate, setStartDate]     = useState('');
-  const [startTime, setStartTime]     = useState('09:00');
-  const [location, setLocation]       = useState('');
-  const [dragging, setDragging]       = useState(false);
+  const [file, setFile]             = useState<File | null>(null);
+  const [ftp, setFtp]               = useState(() => localStorage.getItem('carbmap_ftp') ?? '');
+  const [weight, setWeight]         = useState(() => localStorage.getItem('carbmap_weight') ?? '');
+  const [intensity, setIntensity]   = useState(70);
+  const [scheduleOn, setScheduleOn] = useState(false);
+  const [startDate, setStartDate]   = useState('');
+  const [startTime, setStartTime]   = useState('09:00');
+  const [location, setLocation]     = useState('');
+  const [dragging, setDragging]     = useState(false);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault(); setDragging(false);
@@ -87,30 +96,37 @@ export function UploadForm() {
 
   return (
     <div style={{
-      padding: '3rem 2.5rem 2.5rem',
+      padding: '4rem 2.5rem 3rem',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: '2rem',
+      gap: '2.5rem',
     }}>
       {/* Hero */}
-      <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-        <CarbMapLogo size={72} />
-        <div>
-          <h1 style={{
-            fontSize: '2.4rem', fontWeight: 900, letterSpacing: '-0.04em',
-            color: 'var(--accent-primary)',
-            marginBottom: '0.3rem',
-          }}>
-            CarbMap
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem' }}>
-            Drop your route. Get your plan.
-          </p>
-        </div>
+      <div style={{ textAlign: 'center' }}>
+        <h1 style={{
+          fontFamily: "Georgia, 'Times New Roman', serif",
+          fontSize: '3rem',
+          fontWeight: 700,
+          letterSpacing: '-0.04em',
+          color: '#000',
+          lineHeight: 1,
+          marginBottom: '0.5rem',
+        }}>
+          CarbMap
+        </h1>
+        <p style={{
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+          color: '#999',
+          fontSize: '0.78rem',
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+        }}>
+          Drop your route. Get your plan.
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '500px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '480px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
         {/* Drop zone */}
         <div
@@ -119,30 +135,41 @@ export function UploadForm() {
           onDragLeave={() => setDragging(false)}
           onClick={() => fileInputRef.current?.click()}
           style={{
-            border: `2px dashed ${dragging ? 'var(--accent-primary)' : file ? 'var(--accent-success)' : 'var(--border-strong)'}`,
-            borderRadius: 'var(--radius-xl)',
-            background: dragging ? 'rgba(232,82,30,0.04)' : file ? 'rgba(22,163,74,0.04)' : 'var(--bg-elevated)',
-            padding: '1.6rem',
+            border: `2px solid #000`,
+            background: dragging ? '#f0f0f0' : file ? '#f5f5f5' : '#fff',
+            padding: '2rem 1.5rem',
             textAlign: 'center',
             cursor: 'pointer',
-            transition: 'all 0.18s ease',
+            transition: 'background 0.12s',
           }}
         >
           <input ref={fileInputRef} type="file" accept=".gpx,.fit,.tcx"
             style={{ display: 'none' }}
             onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
-          <div style={{ fontSize: '1.8rem', marginBottom: '0.35rem' }}>{file ? '✅' : '📁'}</div>
+
           {file ? (
             <div>
-              <div style={{ fontWeight: 700, color: 'var(--accent-success)', fontSize: '0.88rem' }}>{file.name}</div>
-              <div style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
+              <div style={{
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                fontWeight: 700, color: '#000', fontSize: '0.95rem',
+              }}>{file.name}</div>
+              <div style={{
+                fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+                fontSize: '0.7rem', color: '#999', marginTop: '0.25rem',
+              }}>
                 {(file.size / 1024).toFixed(0)} KB · click to swap
               </div>
             </div>
           ) : (
             <div>
-              <div style={{ fontWeight: 600, marginBottom: '0.12rem', color: 'var(--text-primary)' }}>Drop your GPX file here</div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>or click to browse · .gpx .fit .tcx</div>
+              <div style={{
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                fontWeight: 700, fontSize: '1rem', color: '#000', marginBottom: '0.25rem',
+              }}>Drop your GPX file here</div>
+              <div style={{
+                fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+                fontSize: '0.72rem', color: '#999', letterSpacing: '0.05em',
+              }}>or click to browse · .gpx .fit .tcx</div>
             </div>
           )}
         </div>
@@ -150,67 +177,66 @@ export function UploadForm() {
         {/* FTP + Weight */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
           <div>
-            <label className="label" style={{ display: 'block', marginBottom: '0.35rem' }}>FTP (Watts)</label>
+            <label style={sansLabel}>FTP (Watts)</label>
             <input type="number" value={ftp} onChange={e => setFtp(e.target.value)}
               placeholder="250" min={50} max={700} style={inputStyle} />
           </div>
           <div>
-            <label className="label" style={{ display: 'block', marginBottom: '0.35rem' }}>Weight (kg)</label>
+            <label style={sansLabel}>Weight (kg)</label>
             <input type="number" value={weight} onChange={e => setWeight(e.target.value)}
               placeholder="70" min={30} max={200} style={inputStyle} />
           </div>
         </div>
 
         {/* Intensity */}
-        <div style={{ padding: '0.1rem 0' }}>
-          <label className="label" style={{ display: 'block', marginBottom: '0.75rem' }}>Ride Intensity</label>
+        <div>
+          <label style={{ ...sansLabel, marginBottom: '0.75rem' }}>Ride Intensity</label>
           <IntensitySlider value={intensity} onChange={setIntensity} />
         </div>
 
         {/* Schedule & Weather toggle */}
-        <div style={{
-          background: 'var(--bg-elevated)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 'var(--radius-md)',
-          overflow: 'hidden',
-        }}>
-          {/* Toggle row */}
+        <div style={{ border: '2px solid #000' }}>
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '0.75rem 1rem', gap: '0.75rem',
           }}>
             <div>
-              <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-primary)' }}>
-                🌤️ Schedule &amp; Weather
+              <div style={{
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                fontWeight: 700, fontSize: '0.9rem', color: '#000',
+              }}>
+                Schedule &amp; Weather
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: 2 }}>
+              <div style={{
+                fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+                fontSize: '0.68rem', color: '#999', marginTop: 2,
+              }}>
                 {scheduleOn ? 'Weather forecast will be included' : 'Off — no weather tab'}
               </div>
             </div>
             <Toggle on={scheduleOn} onToggle={() => setScheduleOn(v => !v)} />
           </div>
 
-          {/* Expanded fields */}
           {scheduleOn && (
             <div style={{
-              padding: '0 1rem 0.9rem',
+              padding: '0.75rem 1rem 1rem',
               display: 'flex', flexDirection: 'column', gap: '0.65rem',
-              borderTop: '1px solid var(--border-subtle)',
-              paddingTop: '0.75rem',
+              borderTop: '1px solid #ccc',
             }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
                 <div>
-                  <label className="label" style={{ display: 'block', marginBottom: '0.3rem' }}>Start Date</label>
+                  <label style={sansLabel}>Start Date</label>
                   <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={inputStyle} />
                 </div>
                 <div>
-                  <label className="label" style={{ display: 'block', marginBottom: '0.3rem' }}>Start Time</label>
+                  <label style={sansLabel}>Start Time</label>
                   <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} style={inputStyle} />
                 </div>
               </div>
               <div>
-                <label className="label" style={{ display: 'block', marginBottom: '0.3rem' }}>
-                  Start Location <span style={{ color: 'var(--text-muted)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>· optional</span>
+                <label style={sansLabel}>
+                  Start Location
+                  <span style={{ color: '#ccc', fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: 6 }}>optional</span>
                 </label>
                 <LocationInput value={location} onChange={setLocation} />
               </div>
@@ -220,17 +246,20 @@ export function UploadForm() {
 
         {error && (
           <div style={{
-            background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.2)',
-            borderRadius: 'var(--radius-md)', padding: '0.7rem 1rem',
-            color: 'var(--accent-danger)', fontSize: '0.85rem',
+            border: '2px solid #000',
+            padding: '0.7rem 1rem',
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+            color: '#000',
+            fontSize: '0.85rem',
+            background: '#f5f5f5',
           }}>
-            ⚠️ {error}
+            {error}
           </div>
         )}
 
         <button type="submit" className="btn btn-primary" disabled={!canSubmit}
-          style={{ fontSize: '0.92rem', padding: '0.85rem', borderRadius: 'var(--radius-md)' }}>
-          🚴 Analyse My Ride →
+          style={{ fontSize: '0.78rem', padding: '0.9rem', letterSpacing: '0.1em' }}>
+          Analyse My Ride →
         </button>
       </form>
 

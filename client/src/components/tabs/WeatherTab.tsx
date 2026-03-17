@@ -1,26 +1,26 @@
 import React from 'react';
 import { WeatherResult } from '../../types/analysis';
 
-interface Props {
-  data: WeatherResult;
-}
+interface Props { data: WeatherResult; }
+
+const sans = "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif";
 
 function windDirectionLabel(deg: number): string {
   const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   return dirs[Math.round(deg / 45) % 8];
 }
 
-function weatherEmoji(code: number): string {
-  if (code === 0 || code === 1) return '☀️';
-  if (code === 2) return '🌤️';
-  if (code === 3) return '☁️';
-  if (code <= 48) return '🌫️';
-  if (code <= 55) return '🌧️';
-  if (code <= 65) return '🌧️';
-  if (code <= 75) return '🌨️';
-  if (code <= 82) return '🌦️';
-  if (code >= 95) return '⛈️';
-  return '🌡️';
+function weatherLabel(code: number): string {
+  if (code === 0 || code === 1) return 'Clear';
+  if (code === 2) return 'Partly cloudy';
+  if (code === 3) return 'Overcast';
+  if (code <= 48) return 'Foggy';
+  if (code <= 55) return 'Drizzle';
+  if (code <= 65) return 'Rain';
+  if (code <= 75) return 'Snow';
+  if (code <= 82) return 'Showers';
+  if (code >= 95) return 'Thunderstorm';
+  return 'Unknown';
 }
 
 function formatForecastTime(iso: string): string {
@@ -41,19 +41,14 @@ export function WeatherTab({ data }: Props) {
       {/* Advisory banner */}
       {advisory && (
         <div style={{
-          background: 'rgba(224,195,91,0.1)',
-          border: '1px solid rgba(224,195,91,0.3)',
-          borderRadius: 'var(--radius-md)',
+          border: '2px solid #000',
           padding: '0.875rem 1rem',
           display: 'flex',
           gap: '0.75rem',
           alignItems: 'flex-start',
         }}>
-          <span style={{ fontSize: '1.25rem', flexShrink: 0 }}>⚠️</span>
-          <div>
-            <div style={{ fontWeight: 700, color: 'var(--accent-warning)', marginBottom: '0.25rem' }}>Weather Advisory</div>
-            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{advisory}</div>
-          </div>
+          <div style={{ fontFamily: sans, fontWeight: 700, fontSize: '0.82rem', letterSpacing: '0.05em', flexShrink: 0 }}>ADVISORY</div>
+          <div style={{ fontFamily: sans, fontSize: '0.875rem', color: '#333' }}>{advisory}</div>
         </div>
       )}
 
@@ -61,77 +56,73 @@ export function WeatherTab({ data }: Props) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
         {points.map((point, idx) => (
           <div key={idx} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
             {/* Card header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #e5e5e5', paddingBottom: '0.75rem' }}>
               <div>
-                <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--accent-primary)' }}>{point.label}</div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 700, fontSize: '1rem', color: '#000' }}>{point.label}</div>
+                <div style={{ fontFamily: sans, fontSize: '0.72rem', color: '#999', marginTop: '0.15rem' }}>
                   {formatForecastTime(point.forecastTime)}
                 </div>
               </div>
-              <span style={{ fontSize: '2rem' }}>{weatherEmoji(point.weatherCode)}</span>
-            </div>
-
-            {/* Main weather info */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-              <div>
-                <div style={{ fontWeight: 800, fontSize: '2rem', lineHeight: 1, color: point.tempC > 30 ? 'var(--accent-danger)' : point.tempC < 5 ? 'var(--accent-info)' : 'var(--text-primary)' }}>
-                  {Math.round(point.tempC)}°C
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
-                  {point.weatherDescription}
-                </div>
+              <div style={{ fontFamily: sans, fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#999', marginTop: 2 }}>
+                {weatherLabel(point.weatherCode)}
               </div>
             </div>
 
-            {/* Detail chips */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {/* Temperature */}
+            <div>
+              <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 700, fontSize: '2.5rem', lineHeight: 1, color: '#000' }}>
+                {Math.round(point.tempC)}°C
+              </div>
+              <div style={{ fontFamily: sans, fontSize: '0.75rem', color: '#999', marginTop: '0.25rem' }}>
+                {point.weatherDescription}
+              </div>
+            </div>
+
+            {/* Detail rows */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>💨 Wind</span>
-                <span style={{ fontWeight: 600, fontSize: '0.875rem', color: point.windSpeedKmh > 40 ? 'var(--accent-danger)' : 'var(--text-primary)' }}>
+                <span style={{ fontFamily: sans, fontSize: '0.78rem', color: '#999' }}>Wind</span>
+                <span style={{ fontFamily: sans, fontWeight: 700, fontSize: '0.82rem', color: '#000' }}>
                   {Math.round(point.windSpeedKmh)} km/h {windDirectionLabel(point.windDirectionDeg)}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>🌧️ Rain prob.</span>
-                <span style={{ fontWeight: 600, fontSize: '0.875rem', color: point.precipProbPct > 60 ? 'var(--accent-info)' : 'var(--text-primary)' }}>
+                <span style={{ fontFamily: sans, fontSize: '0.78rem', color: '#999' }}>Rain prob.</span>
+                <span style={{ fontFamily: sans, fontWeight: 700, fontSize: '0.82rem', color: '#000' }}>
                   {point.precipProbPct}%
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>📍 Coords</span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                <span style={{ fontFamily: sans, fontSize: '0.78rem', color: '#999' }}>Coords</span>
+                <span style={{ fontFamily: sans, fontSize: '0.72rem', color: '#999' }}>
                   {point.lat.toFixed(3)}, {point.lon.toFixed(3)}
                 </span>
               </div>
             </div>
 
-            {/* Precipitation bar */}
-            <div>
-              <div style={{ height: '4px', background: 'var(--bg-elevated)', borderRadius: '999px', overflow: 'hidden' }}>
-                <div style={{
-                  height: '100%',
-                  width: `${point.precipProbPct}%`,
-                  background: point.precipProbPct > 60 ? 'var(--accent-info)' : 'var(--accent-success)',
-                  borderRadius: '999px',
-                  transition: 'width 0.5s ease',
-                }} />
-              </div>
+            {/* Precipitation bar — flat */}
+            <div style={{ height: '4px', background: '#f0f0f0', overflow: 'hidden' }}>
+              <div style={{
+                height: '100%',
+                width: `${point.precipProbPct}%`,
+                background: '#000',
+                transition: 'width 0.4s ease',
+              }} />
             </div>
           </div>
         ))}
       </div>
 
-      {/* No data fallback */}
       {points.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🌐</div>
-          <div>Weather data unavailable. Check your internet connection.</div>
+        <div style={{ textAlign: 'center', padding: '2rem', fontFamily: sans, color: '#999' }}>
+          Weather data unavailable.
         </div>
       )}
 
-      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'right' }}>
-        Weather data: Open-Meteo (free, no API key required)
+      <div style={{ fontFamily: sans, fontSize: '0.73rem', color: '#ccc', textAlign: 'right' }}>
+        Weather data: Open-Meteo
       </div>
     </div>
   );

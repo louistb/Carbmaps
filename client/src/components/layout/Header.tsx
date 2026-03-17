@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAnalysisStore } from '../../store/analysisStore';
 import { useAnalysis } from '../../hooks/useAnalysis';
-import { CarbMapLogo } from '../CarbMapLogo';
 import { IntensitySlider, ftpPctToZoneName } from '../IntensitySlider';
 
 export function Header() {
@@ -15,7 +14,6 @@ export function Header() {
   const [intensity, setIntensity] = useState(initIntensity);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync slider when a reanalysis result arrives
   useEffect(() => {
     if (result) {
       setIntensity((result.pacing.targetZonePctLow + result.pacing.targetZonePctHigh) / 2);
@@ -31,51 +29,67 @@ export function Header() {
 
   return (
     <header style={{
-      background: 'var(--bg-surface)',
-      borderBottom: '1px solid var(--border-subtle)',
+      background: '#fff',
+      borderBottom: '2px solid #000',
       padding: '0.875rem 1.75rem',
       display: 'flex',
       alignItems: 'center',
-      gap: '1.25rem',
+      gap: '2rem',
       flexWrap: 'wrap',
     }}>
       {/* Brand */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexShrink: 0 }}>
-        <CarbMapLogo size={36} />
-        <div>
-          <div style={{
-            fontWeight: 900, fontSize: '1.1rem', letterSpacing: '-0.03em', lineHeight: 1,
-            color: 'var(--accent-primary)',
-          }}>
-            CarbMap
-          </div>
-          <div style={{ fontSize: '0.56rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-            Ride Smarter
-          </div>
+      <div style={{ flexShrink: 0 }}>
+        <div style={{
+          fontFamily: "Georgia, 'Times New Roman', serif",
+          fontWeight: 700,
+          fontSize: '1.25rem',
+          letterSpacing: '-0.02em',
+          lineHeight: 1,
+          color: '#000',
+        }}>
+          CarbMap
+        </div>
+        <div style={{
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+          fontSize: '0.55rem',
+          color: '#999',
+          letterSpacing: '0.14em',
+          textTransform: 'uppercase',
+          marginTop: 3,
+        }}>
+          Ride Smarter
         </div>
       </div>
 
-      {/* Intensity re-analysis slider */}
+      {/* Intensity slider */}
       <div style={{ flex: 1, minWidth: 180, maxWidth: 320 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-          <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)' }}>
+          <span style={{
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+            fontSize: '0.62rem',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            color: '#999',
+          }}>
             Intensity
           </span>
-          <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+          <span style={{
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+            fontSize: '0.7rem',
+            fontWeight: 600,
+            color: '#000',
+          }}>
             {ftpPctToZoneName(intensity)} · {intensity.toFixed(1)}%
-            {isReanalyzing && <span style={{ marginLeft: 5, color: 'var(--accent-primary)' }}>⟳</span>}
+            {isReanalyzing && <span style={{ marginLeft: 5 }}>⟳</span>}
           </span>
         </div>
-        <IntensitySlider
-          value={intensity}
-          onChange={handleChange}
-          compact
-          step={0.5}
-        />
+        <IntensitySlider value={intensity} onChange={handleChange} compact step={0.5} />
       </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-        <button className="btn btn-ghost" onClick={reset} style={{ fontSize: '0.78rem', padding: '0.3rem 0.8rem' }}>
+      <div style={{ flexShrink: 0 }}>
+        <button className="btn btn-ghost" onClick={reset}
+          style={{ fontSize: '0.72rem', padding: '0.4rem 0.9rem' }}>
           ← New Ride
         </button>
       </div>

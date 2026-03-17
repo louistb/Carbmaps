@@ -4,12 +4,11 @@ import React from 'react';
 export const SLIDER_MIN = 60;
 export const SLIDER_MAX = 95;
 
-// Zone boundaries (FTP %)
 const ZONES = [
-  { name: 'Casual',    from: 60, to: 65, color: '#3a6fa8' },
-  { name: 'Endurance', from: 65, to: 75, color: '#2a7a5a' },
-  { name: 'Tempo',     from: 75, to: 85, color: '#b88a10' },
-  { name: 'Race',      from: 88, to: 95, color: '#c86030' },
+  { name: 'Casual',    from: 60, to: 65 },
+  { name: 'Endurance', from: 65, to: 75 },
+  { name: 'Tempo',     from: 75, to: 85 },
+  { name: 'Race',      from: 88, to: 95 },
 ];
 
 export function ftpPctToZoneName(pct: number): string {
@@ -19,51 +18,20 @@ export function ftpPctToZoneName(pct: number): string {
   return 'Race';
 }
 
-function thumbColor(pct: number): string {
-  if (pct <= 63) return '#3a6fa8';
-  if (pct <= 72) return '#2a7a5a';
-  if (pct <= 83) return '#b88a10';
-  return '#c86030';
-}
-
-/** Map FTP % to 0–100 slider position */
 function toPos(pct: number): number {
   return ((pct - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN)) * 100;
 }
 
-// Gradient segments for the track
-function buildGradient(): string {
-  const range = SLIDER_MAX - SLIDER_MIN;
-  const stops: string[] = [];
-  // gap fill
-  const gapColor = '#d4cfc7';
-  let prev = 0;
-  for (const z of ZONES) {
-    const start = ((z.from - SLIDER_MIN) / range) * 100;
-    const end   = ((z.to   - SLIDER_MIN) / range) * 100;
-    if (start > prev) {
-      stops.push(`${gapColor} ${prev}%`, `${gapColor} ${start}%`);
-    }
-    stops.push(`${z.color} ${start}%`, `${z.color} ${end}%`);
-    prev = end;
-  }
-  if (prev < 100) stops.push(`${gapColor} ${prev}%`, `${gapColor} 100%`);
-  return `linear-gradient(to right, ${stops.join(', ')})`;
-}
-
-const TRACK_GRADIENT = buildGradient();
-
 interface Props {
-  value: number;           // FTP % (60–95)
+  value: number;
   onChange: (v: number) => void;
   step?: number;
-  compact?: boolean;       // smaller version for the header
+  compact?: boolean;
 }
 
 export function IntensitySlider({ value, onChange, step = 0.5, compact = false }: Props) {
-  const zoneName  = ftpPctToZoneName(value);
-  const color     = thumbColor(value);
-  const fillPct   = toPos(value);
+  const zoneName = ftpPctToZoneName(value);
+  const fillPct  = toPos(value);
 
   return (
     <div style={{ width: '100%' }}>
@@ -72,56 +40,52 @@ export function IntensitySlider({ value, onChange, step = 0.5, compact = false }
           -webkit-appearance: none;
           appearance: none;
           width: 100%;
-          height: ${compact ? 5 : 7}px;
-          background: ${TRACK_GRADIENT};
+          height: ${compact ? 4 : 6}px;
+          background: #cccccc;
           outline: none;
           cursor: pointer;
         }
         .intensity-range::-webkit-slider-runnable-track {
-          height: ${compact ? 5 : 7}px;
-          background: ${TRACK_GRADIENT};
+          height: ${compact ? 4 : 6}px;
+          background: #cccccc;
         }
         .intensity-range::-moz-range-track {
-          height: ${compact ? 5 : 7}px;
-          background: ${TRACK_GRADIENT};
+          height: ${compact ? 4 : 6}px;
+          background: #cccccc;
           border: none;
         }
         .intensity-range::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
-          width: ${compact ? 16 : 20}px;
-          height: ${compact ? 16 : 20}px;
-          margin-top: ${compact ? '-5.5px' : '-6.5px'};
-          background: #ffffff;
-          border: 2.5px solid ${color};
+          width: ${compact ? 14 : 18}px;
+          height: ${compact ? 14 : 18}px;
+          margin-top: ${compact ? '-5px' : '-6px'};
+          background: #fff;
+          border: 2px solid #000;
           cursor: pointer;
-          transition: border-color 0.15s;
         }
         .intensity-range::-moz-range-thumb {
-          width: ${compact ? 16 : 20}px;
-          height: ${compact ? 16 : 20}px;
-          background: #ffffff;
-          border: 2.5px solid ${color};
+          width: ${compact ? 14 : 18}px;
+          height: ${compact ? 14 : 18}px;
+          background: #fff;
+          border: 2px solid #000;
           cursor: pointer;
         }
       `}</style>
 
       {!compact && (
-        /* Zone name + value badge above the thumb */
-        <div style={{
-          position: 'relative',
-          height: 28,
-          marginBottom: 4,
-        }}>
+        <div style={{ position: 'relative', height: 26, marginBottom: 4 }}>
           <div style={{
             position: 'absolute',
             left: `${fillPct}%`,
             transform: 'translateX(-50%)',
-            background: color,
+            background: '#000',
             color: '#fff',
-            fontSize: '0.7rem',
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+            fontSize: '0.65rem',
             fontWeight: 700,
-            padding: '0.2rem 0.55rem',
+            letterSpacing: '0.05em',
+            padding: '0.2rem 0.5rem',
             whiteSpace: 'nowrap',
             pointerEvents: 'none',
           }}>
@@ -141,8 +105,7 @@ export function IntensitySlider({ value, onChange, step = 0.5, compact = false }
       />
 
       {!compact && (
-        /* Zone labels below */
-        <div style={{ position: 'relative', height: 22, marginTop: 4 }}>
+        <div style={{ position: 'relative', height: 20, marginTop: 4 }}>
           {ZONES.map(z => {
             const midPos = toPos((z.from + z.to) / 2);
             return (
@@ -150,9 +113,12 @@ export function IntensitySlider({ value, onChange, step = 0.5, compact = false }
                 position: 'absolute',
                 left: `${midPos}%`,
                 transform: 'translateX(-50%)',
-                fontSize: '0.65rem',
-                color: z.color,
+                fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+                fontSize: '0.62rem',
+                color: '#999',
                 fontWeight: 600,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
                 whiteSpace: 'nowrap',
               }}>
                 {z.name}

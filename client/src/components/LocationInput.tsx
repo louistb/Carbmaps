@@ -24,14 +24,12 @@ function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T {
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  background: 'var(--bg-elevated)',
-  border: '1px solid var(--border-strong)',
-  borderRadius: 'var(--radius-md)',
+  background: '#fff',
+  border: '2px solid #000',
   padding: '0.65rem 1rem',
-  color: 'var(--text-primary)',
+  color: '#000',
   fontSize: '0.9rem',
   outline: 'none',
-  transition: 'border-color 0.14s',
 };
 
 export function LocationInput({ value, onChange, placeholder = 'e.g. Chamonix, France' }: Props) {

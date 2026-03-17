@@ -37,9 +37,8 @@ export function SavedRidesList() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         {savedRides.map(ride => (
           <div key={ride.id} style={{
-            background: 'var(--bg-surface)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-md)',
+            background: '#fff',
+            border: '2px solid #000',
             padding: '0.75rem 1rem',
             display: 'flex',
             alignItems: 'center',
