@@ -2,6 +2,8 @@ import axios from 'axios';
 import { useAnalysisStore } from '../store/analysisStore';
 import { listLocalRides, saveLocalRide, getLocalRide, deleteLocalRide, updateLocalRide, saveLocalGpx, getLocalGpx } from '../lib/localRides';
 
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
+
 export function useAnalysis() {
   const { setAppState, setResult, setError, setSavedRides, updateResult, setIsReanalyzing } = useAnalysisStore();
 
@@ -10,7 +12,7 @@ export function useAnalysis() {
   const analyze = async (formData: FormData) => {
     setAppState('loading');
     try {
-      const response = await axios.post('/api/analyze', formData, {
+      const response = await axios.post(`${API_BASE}/api/analyze`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 60000,
       });
@@ -77,7 +79,7 @@ export function useAnalysis() {
       fd.append('weightKg', String(ride?.weightKg ?? 70));
       fd.append('intensity', String(intensity));
 
-      const res = await axios.post(`/api/rides/${rideId}/reanalyze`, fd, {
+      const res = await axios.post(`${API_BASE}/api/rides/${rideId}/reanalyze`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const { pacing, climbs, nutrition, weather, routePoints } = res.data;
