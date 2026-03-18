@@ -11,8 +11,11 @@ app.use(helmet());
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : []),
+  ...(process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(/[,;]/).map(o => o.trim().replace(/\/$/, ''))
+    : []),
 ];
+console.log('CORS allowed origins:', allowedOrigins);
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
