@@ -1,4 +1,4 @@
-import type { AnalysisResult } from '../types/analysis';
+import type { AnalysisResult } from '../store/analysisStore';
 
 const KEY     = 'carbmaps_rides';
 const GPX_KEY = (id: string) => `carbmaps_gpx_${id}`;
