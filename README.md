@@ -4,7 +4,7 @@
 
 CarbMaps analyses cycling GPX routes and generates personalised pacing, climb, nutrition, and weather plans — all in the browser. No login, no account, no data stored on the server. Everything lives in your browser's local storage.
 
-**Live app:** [carbmaps.app](https://carbmaps.app)
+**Live app:** [carbmaps.fit](https://carbmaps.fit)
 
 > **100% AI-generated codebase** — every line of code in this repository was written by Claude (Anthropic). The science behind the pacing, nutrition, and climb logic is documented in the `.md` files alongside the engine modules — if you're digging into the logic, start there.
 >

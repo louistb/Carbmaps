@@ -216,7 +216,7 @@ function buildPrintHTML(
 
     <div class="footer">
       <span>FTP ${ftpW}W · ${pacing.targetZonePctLow}–${pacing.targetZonePctHigh}% target zone</span>
-      <span>carbmaps.app</span>
+      <span>carbmaps.fit</span>
     </div>
   </div>
   <script>
@@ -307,7 +307,7 @@ function PreviewCard({ pacing, climbs, nutrition, routePoints }: Props) {
       {/* Footer */}
       <div style={{ background: '#F4EDE3', borderTop: '1px solid #E0D6C8', padding: `${s(1.5)}px ${s(5)}px`, display: 'flex', justifyContent: 'space-between' }}>
         <span style={{ fontSize: s(4), color: '#A8998C' }}>FTP {ftpW}W · {pacing.targetZonePctLow}–{pacing.targetZonePctHigh}% target zone</span>
-        <span style={{ fontSize: s(4), color: '#A8998C' }}>carbmaps.app</span>
+        <span style={{ fontSize: s(4), color: '#A8998C' }}>carbmaps.fit</span>
       </div>
     </div>
   );
