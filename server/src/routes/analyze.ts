@@ -7,7 +7,6 @@ import { runClimbsEngine } from '../engines/climbs.engine';
 import { runNutritionEngine } from '../engines/nutrition.engine';
 import { runWeatherEngine } from '../engines/weather.engine';
 import { RiderSettings } from '../types/rider.types';
-import { saveGpx } from '../db/rides';
 import { RoutePoint } from '../types/route.types';
 import { MapPoint } from '../types/analysis.types';
 
@@ -63,9 +62,6 @@ router.post('/', upload.single('gpxFile'), async (req: Request, res: Response): 
     const weather   = rider.startDateTime
       ? await runWeatherEngine(route, rider as RiderSettings & { startDateTime: string }, pacing, climbs)
       : null;
-
-    // Save GPX for future reanalysis
-    saveGpx(rideId, req.file.buffer);
 
     const routePoints = sampleRoutePoints(route.points, 500);
     res.json({ rideId, pacing, climbs, nutrition, weather, routePoints });

@@ -54,8 +54,6 @@ export function useAnalysis() {
 
   const deleteRide = (id: string) => {
     deleteLocalRide(id);
-    // Best-effort GPX cleanup on server (ignore errors)
-    axios.delete(`/api/rides/${id}`).catch(() => {});
     refreshList();
   };
 
@@ -67,6 +65,7 @@ export function useAnalysis() {
         intensity,
         ftpWatts: ride?.ftpWatts ?? 250,
         weightKg: ride?.weightKg ?? 70,
+        routePoints: ride?.analysisResult?.routePoints ?? [],
       });
       const { pacing, climbs, nutrition, weather, routePoints } = res.data;
       const analysisResult = { pacing, climbs, nutrition, weather, routePoints: routePoints ?? [] };
