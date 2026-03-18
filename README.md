@@ -6,6 +6,10 @@ CarbMaps analyses cycling GPX routes and generates personalised pacing, climb, n
 
 **Live app:** [carbmaps.app](https://carbmaps.app)
 
+> **100% AI-generated codebase** — every line of code in this repository was written by Claude (Anthropic). The science behind the pacing, nutrition, and climb logic is documented in the `.md` files alongside the engine modules — if you're digging into the logic, start there.
+>
+> **Sport scientists and coaches welcome.** The formulas and targets used in the engines (power zones, carb oxidation rates, sodium loss, climb difficulty scoring) are based on published research but may not reflect the latest evidence or edge cases. If you have a background in sport science or coaching and spot something worth improving, please open a pull request — those contributions are especially valued.
+
 ---
 
 ## Features
@@ -124,6 +128,8 @@ Contributions are welcome. Here's how to get started:
 2. Make your changes with clear, focused commits
 3. Open a pull request against `main` — describe what you changed and why
 4. Don't target the `deploy` branch directly — that's reserved for production deploys
+
+**Sport scientists and coaches** — PRs that improve the accuracy of the pacing, nutrition, or climb engines are especially welcome. The scientific rationale for each engine is documented in the `.md` files in `server/src/engines/`. Please include references to the research or guidelines your changes are based on.
 
 ### Project Structure
 
