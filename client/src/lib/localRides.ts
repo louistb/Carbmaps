@@ -1,6 +1,19 @@
 import type { AnalysisResult } from '../types/analysis';
 
-const KEY = 'carbmaps_rides';
+const KEY     = 'carbmaps_rides';
+const GPX_KEY = (id: string) => `carbmaps_gpx_${id}`;
+
+export function saveLocalGpx(id: string, gpxText: string): void {
+  localStorage.setItem(GPX_KEY(id), gpxText);
+}
+
+export function getLocalGpx(id: string): string | null {
+  return localStorage.getItem(GPX_KEY(id));
+}
+
+export function deleteLocalGpx(id: string): void {
+  localStorage.removeItem(GPX_KEY(id));
+}
 
 export interface LocalRide {
   id: string;
@@ -32,6 +45,7 @@ export function getLocalRide(id: string): LocalRide | null {
 
 export function deleteLocalRide(id: string): void {
   localStorage.setItem(KEY, JSON.stringify(listLocalRides().filter(r => r.id !== id)));
+  deleteLocalGpx(id);
 }
 
 export function updateLocalRide(id: string, analysisResult: AnalysisResult, intensity: number): void {

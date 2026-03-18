@@ -262,18 +262,54 @@ const AMENITY_COLOR: Record<string, string> = {
 
 interface NutritionMapProps {
   points: MapPoint[];
+  autoSearch?: boolean;
 }
 
-export function NutritionMap({ points }: NutritionMapProps) {
-  const ref       = useRef<HTMLDivElement>(null);
-  const mapRef    = useRef<L.Map | null>(null);
-  const abortRef  = useRef<AbortController | null>(null);
-  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
-  const [count, setCount]   = useState(0);
+// Thin a list of restaurants so there is at most one per MIN_SPACING_KM along the route.
+// Each restaurant is assigned the distanceKm of its nearest route point, then we do a
+// greedy sweep keeping only those that are at least MIN_SPACING_KM apart.
+const MIN_SPACING_KM = 1.0;
 
-  // Initialise map (no fetch)
+function thinByRouteSpacing(restaurants: Restaurant[], points: MapPoint[]): Restaurant[] {
+  if (restaurants.length === 0) return [];
+
+  // Assign a route-distance to each restaurant
+  const withDist = restaurants.map(r => {
+    let best = Infinity;
+    let bestDist = 0;
+    for (let i = 0; i < points.length; i += 3) {
+      const d = haversineM(r.lat, r.lon, points[i].lat, points[i].lon);
+      if (d < best) { best = d; bestDist = points[i].distanceKm; }
+    }
+    return { r, routeKm: bestDist };
+  });
+
+  // Sort by position along route
+  withDist.sort((a, b) => a.routeKm - b.routeKm);
+
+  // Greedy spacing filter
+  const selected: Restaurant[] = [];
+  let lastKm = -Infinity;
+  for (const { r, routeKm } of withDist) {
+    if (routeKm - lastKm >= MIN_SPACING_KM) {
+      selected.push(r);
+      lastKm = routeKm;
+    }
+  }
+  return selected;
+}
+
+export function NutritionMap({ points, autoSearch = false }: NutritionMapProps) {
+  const ref      = useRef<HTMLDivElement>(null);
+  const mapRef   = useRef<L.Map | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const [status, setStatus]   = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [count, setCount]     = useState(0);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+
+  // Only initialise the map once we have results
   useEffect(() => {
-    if (!ref.current || points.length < 2) return;
+    if (status !== 'done' || !ref.current || restaurants.length === 0) return;
 
     const map = L.map(ref.current, MAP_OPTS);
     mapRef.current = map;
@@ -281,10 +317,23 @@ export function NutritionMap({ points }: NutritionMapProps) {
     L.tileLayer(TILE_URL, { attribution: TILE_ATTR, maxZoom: 19 }).addTo(map);
 
     L.polyline(points.map(p => [p.lat, p.lon] as L.LatLngTuple), {
-      color: '#A8946A',
-      weight: 3.5,
-      opacity: 0.75,
+      color: '#A8946A', weight: 3.5, opacity: 0.75,
     }).addTo(map);
+
+    restaurants.forEach(r => {
+      const color = AMENITY_COLOR[r.type] ?? GOLD;
+      L.circleMarker([r.lat, r.lon], {
+        radius: 7, fillColor: color, color: '#fff', weight: 2, fillOpacity: 1,
+      })
+        .bindPopup(
+          `<div style="font-family:${RAL};padding:2px 0">` +
+          `<div style="font-weight:800;font-size:13px;color:${TEXT};margin-bottom:2px">${r.name}</div>` +
+          `<div style="font-size:11px;color:${MUTED};font-weight:600">${AMENITY_LABEL[r.type] ?? r.type}</div>` +
+          `</div>`,
+          { maxWidth: 180 }
+        )
+        .addTo(map);
+    });
 
     const bounds = L.latLngBounds(points.map(p => [p.lat, p.lon] as L.LatLngTuple));
     const tid = setTimeout(() => {
@@ -293,12 +342,11 @@ export function NutritionMap({ points }: NutritionMapProps) {
       map.fitBounds(bounds, { padding: [24, 24] });
     }, 250);
 
-    return () => { clearTimeout(tid); abortRef.current?.abort(); map.remove(); mapRef.current = null; };
-  }, [points]);
+    return () => { clearTimeout(tid); map.remove(); mapRef.current = null; };
+  }, [status, restaurants]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchRestaurants = () => {
-    if (!mapRef.current || status === 'loading') return;
-
+    if (status === 'loading') return;
     abortRef.current?.abort();
     const abortCtrl = new AbortController();
     abortRef.current = abortCtrl;
@@ -333,126 +381,87 @@ export function NutritionMap({ points }: NutritionMapProps) {
     setStatus('loading');
     tryFetch()
       .then((data: { elements: Array<{ id: number; lat: number; lon: number; tags?: Record<string, string> }> }) => {
-        if (!mapRef.current) return;
-        const restaurants: Restaurant[] = data.elements
-          .filter(el => isNearRoute(el.lat, el.lon, points))
+        const raw: Restaurant[] = data.elements
+          .filter(el => el.tags?.name && isNearRoute(el.lat, el.lon, points))
           .map(el => ({
-            id: el.id,
-            lat: el.lat,
-            lon: el.lon,
-            name: el.tags?.name ?? 'Unnamed',
+            id: el.id, lat: el.lat, lon: el.lon,
+            name: el.tags!.name!,
             type: el.tags?.amenity ?? 'restaurant',
           }));
-
-        restaurants.forEach(r => {
-          const color = AMENITY_COLOR[r.type] ?? GOLD;
-          L.circleMarker([r.lat, r.lon], {
-            radius: 7,
-            fillColor: color,
-            color: '#fff',
-            weight: 2,
-            fillOpacity: 1,
-          })
-            .bindPopup(
-              `<div style="font-family:${RAL};padding:2px 0">` +
-              `<div style="font-weight:800;font-size:13px;color:${TEXT};margin-bottom:2px">${r.name}</div>` +
-              `<div style="font-size:11px;color:${MUTED};font-weight:600">${AMENITY_LABEL[r.type] ?? r.type}</div>` +
-              `</div>`,
-              { maxWidth: 180 }
-            )
-            .addTo(mapRef.current!);
-        });
-
-        setCount(restaurants.length);
+        const thinned = thinByRouteSpacing(raw, points);
+        setRestaurants(thinned);
+        setCount(thinned.length);
         setStatus('done');
       })
       .catch((err) => { if (err?.name !== 'AbortError') setStatus('error'); });
   };
 
+  // Auto-trigger search on mount when requested
+  useEffect(() => {
+    if (autoSearch) fetchRestaurants();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (points.length < 2) return null;
 
   return (
     <div>
-      {/* Map */}
-      <div style={{ position: 'relative' }}>
+      {/* Loading state — shown instead of the map */}
+      {status === 'loading' && (
+        <div style={{
+          height: 260,
+          border: '1.5px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-sm)',
+          background: '#FDFAF6',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          gap: '0.875rem',
+        }}>
+          <svg width="40" height="40" viewBox="0 0 40 40" style={{ animation: 'carbspin 1s linear infinite' }}>
+            <circle cx="20" cy="20" r="16" fill="none" stroke={BORDER} strokeWidth="3.5" />
+            <path d="M20 4 A16 16 0 0 1 36 20" fill="none" stroke={GOLD} strokeWidth="3.5" strokeLinecap="round" />
+          </svg>
+          <div style={{ fontFamily: RAL, fontWeight: 800, fontSize: '0.9rem', color: TEXT }}>
+            Searching for carb vendors…
+          </div>
+          <div style={{ fontFamily: RAL, fontWeight: 500, fontSize: '0.75rem', color: MUTED }}>
+            Querying OpenStreetMap along your route
+          </div>
+          <style>{`@keyframes carbspin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      )}
+
+      {/* Map — only rendered when results are ready */}
+      {status === 'done' && (
         <div ref={ref} style={{
-          width: '100%', height: 320,
+          width: '100%', height: 340,
           border: '1.5px solid var(--border-subtle)',
           borderRadius: 'var(--radius-sm)',
           overflow: 'hidden',
         }} />
+      )}
 
-        {/* Loading overlay */}
-        {status === 'loading' && (
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'rgba(244,237,227,0.82)',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            gap: '0.75rem',
-            borderRadius: 'var(--radius-sm)',
-            backdropFilter: 'blur(2px)',
-          }}>
-            <svg width="36" height="36" viewBox="0 0 36 36" style={{ animation: 'spin 1s linear infinite' }}>
-              <circle cx="18" cy="18" r="14" fill="none" stroke="#E0D6C8" strokeWidth="3" />
-              <path d="M18 4 A14 14 0 0 1 32 18" fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" />
-            </svg>
-            <div style={{ fontFamily: RAL, fontWeight: 700, fontSize: '0.8rem', color: TEXT, letterSpacing: '0.04em' }}>
-              Searching for restaurants…
-            </div>
-            <div style={{ fontFamily: RAL, fontWeight: 500, fontSize: '0.7rem', color: MUTED }}>
-              Querying OpenStreetMap
-            </div>
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-          </div>
-        )}
-
-        {/* Idle prompt overlay */}
-        {status === 'idle' && (
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'rgba(244,237,227,0.72)',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            gap: '0.75rem',
-            borderRadius: 'var(--radius-sm)',
-            backdropFilter: 'blur(1px)',
-          }}>
-            <div style={{ fontSize: '1.75rem' }}>🍽️</div>
-            <div style={{ fontFamily: RAL, fontWeight: 700, fontSize: '0.85rem', color: TEXT }}>
-              Find restaurants along your route
-            </div>
-            <div style={{ fontFamily: RAL, fontWeight: 500, fontSize: '0.72rem', color: MUTED, textAlign: 'center', maxWidth: 240 }}>
-              Cafés, restaurants, bakeries &amp; fast food within 500m
-            </div>
-            <button
-              onClick={fetchRestaurants}
-              style={{
-                marginTop: '0.25rem',
-                fontFamily: RAL,
-                fontWeight: 700,
-                fontSize: '0.75rem',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                background: GOLD,
-                color: '#fff',
-                border: 'none',
-                borderRadius: 2,
-                padding: '0.6rem 1.4rem',
-                cursor: 'pointer',
-              }}
-            >
-              Search Now
-            </button>
-          </div>
-        )}
-      </div>
+      {/* Error */}
+      {status === 'error' && (
+        <div style={{
+          padding: '1rem',
+          border: '1.5px solid #C06050',
+          borderRadius: 'var(--radius-sm)',
+          fontFamily: RAL, fontSize: '0.8rem',
+          color: '#6B1F0A', background: '#F9EDEA',
+        }}>
+          ⚠ Could not load vendor data — Overpass API unreachable
+        </div>
+      )}
 
       {/* Status bar */}
-      <div style={{ fontFamily: RAL, fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.5rem', fontWeight: 500 }}>
-        {status === 'done'  && `${count} place${count !== 1 ? 's' : ''} found within 500m · click a marker for details`}
-        {status === 'error' && '⚠ Could not load restaurant data — Overpass API unreachable'}
-      </div>
+      {status === 'done' && (
+        <div style={{ fontFamily: RAL, fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.5rem', fontWeight: 500 }}>
+          {count > 0
+            ? `${count} place${count !== 1 ? 's' : ''} found · one per km along route · click a marker for details`
+            : 'No named vendors found within 500m of this route'}
+        </div>
+      )}
 
       {status === 'done' && count > 0 && (
         <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useAnalysisStore } from '../store/analysisStore';
-import { listLocalRides, saveLocalRide, getLocalRide, deleteLocalRide, updateLocalRide } from '../lib/localRides';
+import { listLocalRides, saveLocalRide, getLocalRide, deleteLocalRide, updateLocalRide, saveLocalGpx, getLocalGpx } from '../lib/localRides';
 
 export function useAnalysis() {
   const { setAppState, setResult, setError, setSavedRides, updateResult, setIsReanalyzing } = useAnalysisStore();
@@ -16,6 +16,13 @@ export function useAnalysis() {
       });
       const { rideId, pacing, climbs, nutrition, weather, routePoints } = response.data;
       const analysisResult = { pacing, climbs, nutrition, weather, routePoints: routePoints ?? [] };
+
+      // Store GPX text so reanalysis can resend it without server-side storage
+      const gpxFile = formData.get('gpxFile') as File;
+      if (gpxFile) {
+        const gpxText = await gpxFile.text();
+        saveLocalGpx(rideId, gpxText);
+      }
 
       const lastSegment = pacing.segments[pacing.segments.length - 1];
       saveLocalRide({
@@ -60,12 +67,18 @@ export function useAnalysis() {
   const reanalyze = async (rideId: string, intensity: number) => {
     setIsReanalyzing(true);
     try {
-      const ride = getLocalRide(rideId);
-      const res = await axios.post(`/api/rides/${rideId}/reanalyze`, {
-        intensity,
-        ftpWatts: ride?.ftpWatts ?? 250,
-        weightKg: ride?.weightKg ?? 70,
-        routePoints: ride?.analysisResult?.routePoints ?? [],
+      const ride    = getLocalRide(rideId);
+      const gpxText = getLocalGpx(rideId);
+      if (!gpxText) { setIsReanalyzing(false); return; }
+
+      const fd = new FormData();
+      fd.append('gpxFile', new Blob([gpxText], { type: 'application/gpx+xml' }), `${rideId}.gpx`);
+      fd.append('ftpWatts', String(ride?.ftpWatts ?? 250));
+      fd.append('weightKg', String(ride?.weightKg ?? 70));
+      fd.append('intensity', String(intensity));
+
+      const res = await axios.post(`/api/rides/${rideId}/reanalyze`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       const { pacing, climbs, nutrition, weather, routePoints } = res.data;
       const analysisResult = { pacing, climbs, nutrition, weather, routePoints: routePoints ?? [] };

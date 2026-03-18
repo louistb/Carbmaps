@@ -1,37 +1,23 @@
 import { Router, Request, Response } from 'express';
+import multer from 'multer';
+import { parseRoute } from '../ingestion';
 import { runPacingEngine } from '../engines/pacing.engine';
 import { runClimbsEngine } from '../engines/climbs.engine';
 import { runNutritionEngine } from '../engines/nutrition.engine';
 import { RiderSettings } from '../types/rider.types';
-import { ParsedRoute, RoutePoint } from '../types/route.types';
+import { RoutePoint } from '../types/route.types';
 import { MapPoint } from '../types/analysis.types';
 
-function routeFromPoints(mapPoints: MapPoint[]): ParsedRoute {
-  const points: RoutePoint[] = mapPoints.map(p => ({
-    lat: p.lat,
-    lon: p.lon,
-    elevationM: p.elevationM,
-    distanceFromStartKm: p.distanceKm,
-  }));
-
-  let totalElevationGainM = 0;
-  let totalElevationLossM = 0;
-  for (let i = 1; i < points.length; i++) {
-    const diff = points[i].elevationM - points[i - 1].elevationM;
-    if (diff > 0) totalElevationGainM += diff;
-    else totalElevationLossM += Math.abs(diff);
-  }
-
-  return {
-    points,
-    totalDistanceKm: points[points.length - 1]?.distanceFromStartKm ?? 0,
-    totalElevationGainM,
-    totalElevationLossM,
-    format: 'gpx',
-  };
+function sampleRoutePoints(points: RoutePoint[], maxN: number): MapPoint[] {
+  const src = points.length <= maxN ? points : Array.from(
+    { length: maxN },
+    (_, i) => points[Math.round(i * (points.length - 1) / (maxN - 1))]
+  );
+  return src.map(p => ({ lat: p.lat, lon: p.lon, distanceKm: p.distanceFromStartKm, elevationM: p.elevationM }));
 }
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 // DELETE /api/rides/:id — nothing stored server-side, always succeeds
 router.delete('/:id', (_req: Request, res: Response) => {
@@ -39,9 +25,14 @@ router.delete('/:id', (_req: Request, res: Response) => {
 });
 
 // POST /api/rides/:id/reanalyze — re-run engines with new intensity
-// Client sends routePoints (from localStorage) so no disk storage is needed
-router.post('/:id/reanalyze', async (req: Request, res: Response): Promise<void> => {
+// Client sends the GPX file from localStorage so no server-side storage is needed
+router.post('/:id/reanalyze', upload.single('gpxFile'), async (req: Request, res: Response): Promise<void> => {
   try {
+    if (!req.file) {
+      res.status(400).json({ error: 'GPX file is required for reanalysis' });
+      return;
+    }
+
     const intensityN = parseFloat(req.body.intensity);
     if (isNaN(intensityN) || intensityN < 55 || intensityN > 100) {
       res.status(400).json({ error: 'intensity must be a number between 55 and 100 (FTP %)' });
@@ -55,19 +46,14 @@ router.post('/:id/reanalyze', async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const mapPoints: MapPoint[] = req.body.routePoints;
-    if (!Array.isArray(mapPoints) || mapPoints.length < 2) {
-      res.status(400).json({ error: 'routePoints array is required for reanalysis' });
-      return;
-    }
-
     const rider: RiderSettings = { ftpWatts: ftp, weightKg: weight, intensity: intensityN };
-    const route    = routeFromPoints(mapPoints);
-    const pacing   = runPacingEngine(route, rider);
-    const climbs   = runClimbsEngine(route, rider, pacing);
+    const route     = parseRoute(req.file.originalname, req.file.buffer);
+    const pacing    = runPacingEngine(route, rider);
+    const climbs    = runClimbsEngine(route, rider, pacing);
     const nutrition = runNutritionEngine(route, rider, pacing);
 
-    res.json({ rideId: req.params.id, pacing, climbs, nutrition, weather: null, routePoints: mapPoints });
+    const routePoints = sampleRoutePoints(route.points, 500);
+    res.json({ rideId: req.params.id, pacing, climbs, nutrition, weather: null, routePoints });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Reanalysis failed';
     console.error('Reanalysis error:', err);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
@@ -32,6 +32,8 @@ const NutritionTooltip = ({ active, payload, label }: any) => {
 };
 
 export function NutritionTab({ data, routePoints }: Props) {
+  const [showMap, setShowMap]         = useState(false);
+  const [showAllHours, setShowAllHours] = useState(false);
   const {
     totalKcal, totalCarbsG, totalFluidMl, totalSodiumMg,
     carbsPerHour, fluidPerHourMl, sodiumPerHourMg,
@@ -115,11 +117,11 @@ export function NutritionTab({ data, routePoints }: Props) {
         }}>
           Hourly Food Plan
         </div>
-        {hourlyPlan.map((slot, idx) => (
+        {(showAllHours || hourlyPlan.length <= 7 ? hourlyPlan : hourlyPlan.slice(0, 7)).map((slot, idx, arr) => (
           <div key={slot.hour} style={{
             display: 'flex', alignItems: 'center', gap: '1rem',
             padding: '0.75rem 1.25rem',
-            borderBottom: idx < hourlyPlan.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+            borderBottom: idx < arr.length - 1 || (!showAllHours && hourlyPlan.length > 7) ? '1px solid var(--border-subtle)' : 'none',
             flexWrap: 'wrap',
           }}>
             <div style={{
@@ -150,22 +152,65 @@ export function NutritionTab({ data, routePoints }: Props) {
             </div>
           </div>
         ))}
+        {hourlyPlan.length > 7 && (
+          <button
+            onClick={() => setShowAllHours(v => !v)}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              background: 'var(--bg-elevated)',
+              border: 'none',
+              borderTop: showAllHours ? '1px solid var(--border-subtle)' : 'none',
+              fontFamily: ral,
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              color: 'var(--accent-gold)',
+              letterSpacing: '0.08em',
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+            }}
+          >
+            {showAllHours
+              ? `↑ Show less`
+              : `↓ Show ${hourlyPlan.length - 7} more hour${hourlyPlan.length - 7 !== 1 ? 's' : ''}`}
+          </button>
+        )}
       </div>
 
-      {/* Restaurants near route */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{
-          padding: '0.875rem 1.25rem',
-          borderBottom: '1.5px solid var(--border-subtle)',
-          fontFamily: ral, fontWeight: 800, fontSize: '0.95rem',
-          color: 'var(--text-primary)', background: 'var(--bg-elevated)',
-        }}>
-          Restaurants &amp; Cafés Near Route
+      {/* Carb vendors */}
+      {!showMap ? (
+        <button
+          onClick={() => setShowMap(true)}
+          className="btn btn-ghost"
+          style={{
+            width: '100%',
+            padding: '1rem',
+            fontSize: '0.8rem',
+            letterSpacing: '0.1em',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.6rem',
+          }}
+        >
+          <span style={{ fontSize: '1rem' }}>🍽️</span>
+          Find carb vendors on my route
+        </button>
+      ) : (
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{
+            padding: '0.875rem 1.25rem',
+            borderBottom: '1.5px solid var(--border-subtle)',
+            fontFamily: ral, fontWeight: 800, fontSize: '0.95rem',
+            color: 'var(--text-primary)', background: 'var(--bg-elevated)',
+          }}>
+            Restaurants &amp; Cafés Near Route
+          </div>
+          <div style={{ padding: '1rem 1.25rem' }}>
+            <NutritionMap points={routePoints} autoSearch />
+          </div>
         </div>
-        <div style={{ padding: '1rem 1.25rem' }}>
-          <NutritionMap points={routePoints} />
-        </div>
-      </div>
+      )}
 
       <div style={{ fontFamily: ral, fontSize: '0.73rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
         Targets based on evidence-backed guidelines (60–90g carbs/h, 625ml fluid/h, 600mg sodium/h). Gut-train in training before race day.
