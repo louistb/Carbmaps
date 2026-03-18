@@ -1,46 +1,171 @@
-# CarbMaps 🗺️
+# CarbMaps
 
-A local web app that analyses cycling GPX routes and generates personalised pacing, climb, nutrition, and weather plans.
+> Eat carbs, ride hard.
 
-## Quick Start
+CarbMaps analyses cycling GPX routes and generates personalised pacing, climb, nutrition, and weather plans — all in the browser. No login, no account, no data stored on the server. Everything lives in your browser's local storage.
 
-You need Node.js 18+ installed.
+**Live app:** [carbmaps.app](https://carbmaps.app)
 
-### Terminal 1 — Backend (port 3001)
+---
 
+## Features
+
+- **Pacing Strategy** — NP, IF, TSS, per-segment power targets, hold-back flags for the climbs
+- **Climbs** — Detects all climbs ≥4% over ≥500m with suggested power and severity rating
+- **Nutrition** — Hourly carb / fluid / sodium plan with food suggestions and a collapsible view for long rides
+- **Weather** — Forecast at start, 25%, 50%, 75%, finish and each climb start (requires a planned start date)
+- **Cue Sheet** — Printable 4×2 inch card with key climbs and condensed fueling plan, stick it on your stem
+- **Carb Vendors** — On-demand OpenStreetMap search for restaurants, cafés, bakeries and fast food within 500m of your route, thinned to one per km so it stays readable
+- **Saved Rides** — All results stored in localStorage, reload or tweak intensity without re-uploading
+- **Re-analysis** — Adjust ride intensity from the header and all tabs update live
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, TypeScript, Vite |
+| State | Zustand |
+| Animation | Framer Motion |
+| Charts | Recharts |
+| Maps | Leaflet + CartoDB Voyager tiles |
+| Backend | Node.js, Express, TypeScript |
+| Weather | Open-Meteo (free, no key needed) |
+| Vendor search | OpenStreetMap Overpass API (free, no key needed) |
+
+---
+
+## Local Development
+
+You need **Node.js 18+**.
+
+**Terminal 1 — Backend (port 3001)**
 ```bash
 cd server
 npm install
 npm run dev
 ```
 
-### Terminal 2 — Frontend (port 5173)
-
+**Terminal 2 — Frontend (port 5173)**
 ```bash
 cd client
 npm install
 npm run dev
 ```
 
-Then open [http://localhost:5173](http://localhost:5173).
+Open [http://localhost:5173](http://localhost:5173).
 
-## Usage
+The Vite dev server proxies `/api/*` to `localhost:3001` automatically — no extra config needed.
 
-1. Upload a `.gpx` file (any real cycling route)
-2. Enter your FTP (watts), body weight (kg), ride intensity, and planned start date/time
-3. Click **Analyse My Ride**
-4. Explore the 4 result tabs:
-   - **🚴 Pacing Strategy** — NP, IF, TSS, per-segment power targets with flags
-   - **⛰️ Climbs** — All climbs ≥4% over ≥500m with power suggestions
-   - **🍌 Nutrition** — Hourly carb/fluid/sodium plan with food suggestions
-   - **🌤️ Weather** — Forecast at start, 25%, 50%, 75%, finish + climb starts
+---
 
-## Tech Stack
+## Environment Variables
 
-- **Backend:** Node.js + Express + TypeScript (`ts-node-dev`)
-- **Frontend:** React + Vite + TypeScript + Framer Motion + Zustand
-- **Weather:** Open-Meteo (free, no API key required)
+### Backend (`server/`)
+
+| Variable | Required | Description |
+|---|---|---|
+| `PORT` | No | HTTP port (default: `3001`) |
+| `ALLOWED_ORIGINS` | Production | Comma-separated list of allowed frontend URLs for CORS |
+
+Example `.env` for production:
+```
+ALLOWED_ORIGINS=https://carbmaps.app,https://www.carbmaps.app
+```
+
+### Frontend (`client/`)
+
+| Variable | Required | Description |
+|---|---|---|
+| `VITE_API_URL` | Production | Full URL of the backend (e.g. `https://api.carbmaps.app`). Leave unset in dev — the Vite proxy handles it. |
+
+---
+
+## Architecture
+
+The server is **fully stateless** — it never writes anything to disk or a database. Every request is self-contained:
+
+1. `POST /api/analyze` — receives GPX + rider settings, runs all engines in memory, returns JSON
+2. `POST /api/rides/:id/reanalyze` — client sends the GPX back from localStorage with new intensity settings, server re-runs engines
+3. `DELETE /api/rides/:id` — no-op, always returns `{ success: true }`
+
+All persistence is on the client via `localStorage`:
+- Ride metadata and analysis results → `carbmaps_rides`
+- GPX file content (for re-analysis) → `carbmaps_gpx_{id}`
+- FTP and weight → `carbmaps_ftp`, `carbmaps_weight`
+
+---
+
+## Deployment
+
+The app is deployed on **DigitalOcean App Platform**:
+
+- **Frontend** — Static Site (free tier), built from `client/`, output `dist/`
+- **Backend** — Web Service ($5/month), built from `server/`, runs `node dist/index.js`
+
+Pushing to the `deploy` branch triggers an automatic deploy.
+
+```bash
+# Ship to production
+git checkout deploy
+git merge main
+git push origin deploy
+git checkout main
+```
+
+---
+
+## Contributing
+
+Contributions are welcome. Here's how to get started:
+
+1. Fork the repo and create a branch from `main`
+2. Make your changes with clear, focused commits
+3. Open a pull request against `main` — describe what you changed and why
+4. Don't target the `deploy` branch directly — that's reserved for production deploys
+
+### Project Structure
+
+```
+carbmaps/
+├── client/                  # React frontend
+│   └── src/
+│       ├── components/      # UI components
+│       │   ├── layout/      # Header, TabBar
+│       │   ├── tabs/        # PacingTab, ClimbsTab, NutritionTab, WeatherTab, CueSheetTab
+│       │   └── upload/      # UploadForm, SavedRidesList
+│       ├── hooks/           # useAnalysis
+│       ├── lib/             # localRides (localStorage helpers)
+│       ├── store/           # Zustand store
+│       ├── styles/          # globals.css (design tokens)
+│       └── types/           # Shared TypeScript types
+└── server/                  # Express backend
+    └── src/
+        ├── engines/         # pacing, climbs, nutrition, weather
+        ├── ingestion/       # GPX parser
+        ├── routes/          # /api/analyze, /api/rides
+        └── types/           # Shared TypeScript types
+```
+
+### Design System
+
+The UI uses a warm editorial palette defined as CSS custom properties in `client/src/styles/globals.css`:
+
+```
+--bg-base:        #F4EDE3   warm cream background
+--accent-gold:    #C9A96E   primary accent
+--text-primary:   #1A1A18   near-black
+--text-muted:     #A8998C   secondary text
+--border-subtle:  #E0D6C8   dividers
+```
+
+Fonts: **MedievalSharp** (logo only) + **Raleway** (all UI).
+
+---
 
 ## No API Keys Required
 
-Weather data comes from [Open-Meteo](https://open-meteo.com/) which is free and requires no registration.
+Both external data sources are free and require no registration:
+- [Open-Meteo](https://open-meteo.com/) — weather forecasts
+- [OpenStreetMap Overpass API](https://overpass-api.de/) — restaurant/café data
