@@ -40,7 +40,10 @@ function estimateSpeedKmh(powerW: number, gradientPct: number, totalMassKg = 80)
   const Fconst = Fgravity + Frr;
 
   // Solve cubic: aeroCoeff*v³ + Fconst*v - powerW = 0  (Newton's method)
-  let v = Math.max(0.5, powerW / (Fconst + 50)); // initial guess m/s
+  // On descents Fconst is negative; seed from aero-equilibrium speed to avoid divergence
+  let v = Fconst < 0
+    ? Math.sqrt(-Fconst / aeroCoeff) + 1   // near terminal velocity
+    : Math.max(0.5, powerW / (Fconst + 50)); // uphill/flat guess
   for (let i = 0; i < 25; i++) {
     const f  = aeroCoeff * v * v * v + Fconst * v - powerW;
     const df = 3 * aeroCoeff * v * v + Fconst;
