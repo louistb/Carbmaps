@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPoint, SegmentPacing, ClimbData } from '../types/analysis';
+import { useAnalysisStore } from '../store/analysisStore';
 
 // ── Design tokens (mirrored from globals.css) ─────────────────────────────────
 
@@ -239,13 +240,6 @@ function haversineM(lat1: number, lon1: number, lat2: number, lon2: number): num
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function isNearRoute(lat: number, lon: number, points: MapPoint[], thresholdM = 500): boolean {
-  for (let i = 0; i < points.length; i += 5) {
-    if (haversineM(lat, lon, points[i].lat, points[i].lon) < thresholdM) return true;
-  }
-  return false;
-}
-
 const AMENITY_LABEL: Record<string, string> = {
   restaurant: 'Restaurant',
   cafe: 'Café',
@@ -299,6 +293,14 @@ function thinByRouteSpacing(restaurants: Restaurant[], points: MapPoint[]): Rest
   return selected;
 }
 
+const VENDOR_CACHE_KEY = (id: string) => `carbmaps_vendors_${id}`;
+
+const MIRRORS = [
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
+  'https://overpass-api.de/api/interpreter',
+];
+
 export function NutritionMap({ points, autoSearch = false }: NutritionMapProps) {
   const ref      = useRef<HTMLDivElement>(null);
   const mapRef   = useRef<L.Map | null>(null);
@@ -306,6 +308,7 @@ export function NutritionMap({ points, autoSearch = false }: NutritionMapProps) 
   const [status, setStatus]   = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [count, setCount]     = useState(0);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const { rideId } = useAnalysisStore();
 
   // Only initialise the map once we have results
   useEffect(() => {
@@ -347,53 +350,73 @@ export function NutritionMap({ points, autoSearch = false }: NutritionMapProps) 
 
   const fetchRestaurants = () => {
     if (status === 'loading') return;
+
+    // Cache hit → instant
+    if (rideId) {
+      try {
+        const cached = localStorage.getItem(VENDOR_CACHE_KEY(rideId));
+        if (cached) {
+          const parsed: Restaurant[] = JSON.parse(cached);
+          setRestaurants(parsed);
+          setCount(parsed.length);
+          setStatus('done');
+          return;
+        }
+      } catch { /* corrupt cache, fall through to fetch */ }
+    }
+
     abortRef.current?.abort();
     const abortCtrl = new AbortController();
     abortRef.current = abortCtrl;
 
-    const lats  = points.map(p => p.lat);
-    const lons  = points.map(p => p.lon);
-    const south = Math.min(...lats) - 0.01;
-    const north = Math.max(...lats) + 0.01;
-    const west  = Math.min(...lons) - 0.01;
-    const east  = Math.max(...lons) + 0.01;
+    // Sample 60 points, split into 3 sections → parallel queries on different mirrors
+    const N      = Math.min(60, points.length);
+    const step   = (points.length - 1) / (N - 1);
+    const sampled = Array.from({ length: N }, (_, i) => points[Math.round(i * step)]);
+    const chunk  = Math.ceil(N / 3);
+    const sections = [
+      sampled.slice(0, chunk + 1),
+      sampled.slice(chunk, 2 * chunk + 1),
+      sampled.slice(2 * chunk),
+    ].filter(s => s.length >= 2);
 
-    const query = `[out:json][timeout:30];(node["amenity"~"restaurant|cafe|fast_food|bakery"](${south},${west},${north},${east}););out body;`;
-
-    const MIRRORS = [
-      'https://overpass.kumi.systems/api/interpreter',
-      'https://overpass.private.coffee/api/interpreter',
-      'https://overpass-api.de/api/interpreter',
-    ];
-
-    const tryFetch = async () => {
-      for (const url of MIRRORS) {
-        try {
-          const r = await fetch(url, { method: 'POST', body: query, signal: abortCtrl.signal });
-          if (r.ok) return await r.json();
-        } catch (e: any) {
-          if (e?.name === 'AbortError') throw e;
-        }
-      }
-      throw new Error('all mirrors failed');
+    const buildQuery = (pts: MapPoint[]) => {
+      const poly = pts.map(p => `${p.lat.toFixed(5)},${p.lon.toFixed(5)}`).join(',');
+      return `[out:json][timeout:20];(node["amenity"~"restaurant|cafe|fast_food|bakery"](around:400,${poly}););out body;`;
     };
 
     setStatus('loading');
-    tryFetch()
-      .then((data: { elements: Array<{ id: number; lat: number; lon: number; tags?: Record<string, string> }> }) => {
-        const raw: Restaurant[] = data.elements
-          .filter(el => el.tags?.name && isNearRoute(el.lat, el.lon, points))
-          .map(el => ({
-            id: el.id, lat: el.lat, lon: el.lon,
-            name: el.tags!.name!,
-            type: el.tags?.amenity ?? 'restaurant',
-          }));
-        const thinned = thinByRouteSpacing(raw, points);
-        setRestaurants(thinned);
-        setCount(thinned.length);
-        setStatus('done');
-      })
-      .catch((err) => { if (err?.name !== 'AbortError') setStatus('error'); });
+    Promise.allSettled(
+      sections.map((section, i) =>
+        fetch(MIRRORS[i % MIRRORS.length], {
+          method: 'POST', body: buildQuery(section), signal: abortCtrl.signal,
+        }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      )
+    ).then(results => {
+      if (abortCtrl.signal.aborted) return;
+      if (results.every(r => r.status === 'rejected')) { setStatus('error'); return; }
+
+      const seen = new Set<number>();
+      const raw: Restaurant[] = [];
+      for (const result of results) {
+        if (result.status === 'rejected') continue;
+        for (const el of (result.value as any).elements) {
+          if (!el.tags?.name || seen.has(el.id)) continue;
+          seen.add(el.id);
+          raw.push({ id: el.id, lat: el.lat, lon: el.lon, name: el.tags.name, type: el.tags?.amenity ?? 'restaurant' });
+        }
+      }
+
+      const thinned = thinByRouteSpacing(raw, points);
+      setRestaurants(thinned);
+      setCount(thinned.length);
+      setStatus('done');
+
+      // Cache for instant loads on revisit
+      if (rideId) {
+        try { localStorage.setItem(VENDOR_CACHE_KEY(rideId), JSON.stringify(thinned)); } catch { /* storage full */ }
+      }
+    });
   };
 
   // Auto-trigger search on mount when requested

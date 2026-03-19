@@ -71,12 +71,12 @@ export function useAnalysis() {
     try {
       const ride    = getLocalRide(rideId);
       const gpxText = getLocalGpx(rideId);
-      if (!gpxText) { setIsReanalyzing(false); return; }
+      if (!ride || !gpxText) { setIsReanalyzing(false); return; }
 
       const fd = new FormData();
       fd.append('gpxFile', new Blob([gpxText], { type: 'application/gpx+xml' }), `${rideId}.gpx`);
-      fd.append('ftpWatts', String(ride?.ftpWatts ?? 250));
-      fd.append('weightKg', String(ride?.weightKg ?? 70));
+      fd.append('ftpWatts', String(ride.ftpWatts));
+      fd.append('weightKg', String(ride.weightKg));
       fd.append('intensity', String(intensity));
 
       const res = await axios.post(`${API_BASE}/api/rides/${rideId}/reanalyze`, fd, {

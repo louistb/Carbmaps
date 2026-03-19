@@ -4,6 +4,9 @@ import { useAnalysis } from '../../hooks/useAnalysis';
 import { useAnalysisStore } from '../../store/analysisStore';
 import { SavedRidesList } from './SavedRidesList';
 import { IntensitySlider } from '../IntensitySlider';
+import { StravaConnect } from '../strava/StravaConnect';
+import { useStrava } from '../../hooks/useStrava';
+import type { StravaRoute } from '../../hooks/useStrava';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 18 },
@@ -72,42 +75,55 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 
 export function UploadForm() {
   const { analyze } = useAnalysis();
+  const { analyzeRoute } = useStrava();
   const { error } = useAnalysisStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [file, setFile]             = useState<File | null>(null);
-  const [ftp, setFtp]               = useState(() => localStorage.getItem('carbmaps_ftp') ?? '');
-  const [weight, setWeight]         = useState(() => localStorage.getItem('carbmaps_weight') ?? '');
-  const [intensity, setIntensity]   = useState(70);
-  const [scheduleOn, setScheduleOn] = useState(false);
-  const [startDate, setStartDate]   = useState('');
-  const [startTime, setStartTime]   = useState('09:00');
-  const [dragging, setDragging]     = useState(false);
+  const [file, setFile]                       = useState<File | null>(null);
+  const [selectedRoute, setSelectedRoute]     = useState<StravaRoute | null>(null);
+  const [ftp, setFtp]                         = useState(() => localStorage.getItem('carbmaps_ftp') ?? '');
+  const [weight, setWeight]                   = useState(() => localStorage.getItem('carbmaps_weight') ?? '');
+  const [intensity, setIntensity]             = useState(70);
+  const [scheduleOn, setScheduleOn]           = useState(false);
+  const [startDate, setStartDate]             = useState('');
+  const [startTime, setStartTime]             = useState('09:00');
+  const [dragging, setDragging]               = useState(false);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault(); setDragging(false);
     const f = e.dataTransfer.files[0];
-    if (f) setFile(f);
+    if (f) { setFile(f); setSelectedRoute(null); }
+  }, []);
+
+  const handleSelectRoute = useCallback((route: StravaRoute) => {
+    setSelectedRoute(r => r?.id === route.id ? null : route);
+    setFile(null);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !ftp || !weight) return;
+    if (!ftp || !weight) return;
     localStorage.setItem('carbmaps_ftp', ftp);
     localStorage.setItem('carbmaps_weight', weight);
+    const startDateTime = scheduleOn && startDate
+      ? new Date(`${startDate}T${startTime}:00`).toISOString()
+      : undefined;
+
+    if (selectedRoute) {
+      await analyzeRoute(selectedRoute.id, selectedRoute.name, parseFloat(ftp), parseFloat(weight), intensity, startDateTime);
+      return;
+    }
+    if (!file) return;
     const fd = new FormData();
     fd.append('gpxFile', file);
     fd.append('ftpWatts', ftp);
     fd.append('weightKg', weight);
     fd.append('intensity', String(intensity));
-    if (scheduleOn && startDate) {
-      const startDateTime = new Date(`${startDate}T${startTime}:00`).toISOString();
-      fd.append('startDateTime', startDateTime);
-    }
+    if (startDateTime) fd.append('startDateTime', startDateTime);
     await analyze(fd);
   };
 
-  const canSubmit = !!file && !!ftp && !!weight;
+  const canSubmit = !!(ftp && weight && (file || selectedRoute));
 
   return (
     <div style={{
@@ -188,21 +204,47 @@ export function UploadForm() {
         style={{ width: '100%', maxWidth: '520px', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
       >
 
+        {/* Strava import */}
+        <motion.div variants={fadeUp}>
+          <StravaConnect
+            onSelect={handleSelectRoute}
+            selectedRouteId={selectedRoute?.id ?? null}
+          />
+        </motion.div>
+
+        {/* Divider */}
+        <motion.div variants={fadeUp} style={{
+          display: 'flex', alignItems: 'center', gap: '0.75rem',
+        }}>
+          <div style={{ flex: 1, height: 1, background: 'var(--border-subtle)' }} />
+          <span style={{
+            fontFamily: "'Raleway', sans-serif",
+            fontSize: '0.65rem',
+            fontWeight: 600,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            color: 'var(--text-muted)',
+          }}>or upload a file</span>
+          <div style={{ flex: 1, height: 1, background: 'var(--border-subtle)' }} />
+        </motion.div>
+
         {/* Drop zone */}
         <motion.div variants={fadeUp}>
           <div
-            onDrop={handleDrop}
-            onDragOver={e => { e.preventDefault(); setDragging(true); }}
-            onDragLeave={() => setDragging(false)}
-            onClick={() => fileInputRef.current?.click()}
+            onDrop={selectedRoute ? undefined : handleDrop}
+            onDragOver={selectedRoute ? undefined : e => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={selectedRoute ? undefined : () => setDragging(false)}
+            onClick={selectedRoute ? undefined : () => fileInputRef.current?.click()}
             style={{
-              border: `2px dashed ${dragging ? 'var(--accent-gold)' : file ? 'var(--accent-gold)' : 'var(--border-subtle)'}`,
+              border: `2px dashed ${selectedRoute ? 'var(--border-subtle)' : dragging ? 'var(--accent-gold)' : file ? 'var(--accent-gold)' : 'var(--border-subtle)'}`,
               borderRadius: 'var(--radius-md)',
-              background: dragging ? '#FBF3E4' : file ? '#FFFCF5' : '#fff',
+              background: selectedRoute ? 'var(--bg-elevated)' : dragging ? '#FBF3E4' : file ? '#FFFCF5' : '#fff',
               padding: '2.5rem 1.5rem',
               textAlign: 'center',
-              cursor: 'pointer',
+              cursor: selectedRoute ? 'not-allowed' : 'pointer',
               transition: 'all 0.18s',
+              opacity: selectedRoute ? 0.45 : 1,
+              pointerEvents: selectedRoute ? 'none' : 'auto',
             }}
           >
             <input ref={fileInputRef} type="file" accept=".gpx,.fit,.tcx"

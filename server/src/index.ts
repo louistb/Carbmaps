@@ -1,8 +1,10 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import analyzeRouter from './routes/analyze';
 import ridesRouter from './routes/rides';
+import stravaRouter from './routes/strava';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -21,6 +23,7 @@ app.use(express.json());
 
 app.use('/api/analyze', analyzeRouter);
 app.use('/api/rides', ridesRouter);
+app.use('/api/strava', stravaRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAnalysisStore } from '../../store/analysisStore';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { IntensitySlider, ftpPctToZoneName } from '../IntensitySlider';
@@ -12,7 +12,6 @@ export function Header() {
     : 70;
 
   const [intensity, setIntensity] = useState(initIntensity);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (result) {
@@ -20,11 +19,9 @@ export function Header() {
     }
   }, [result?.pacing.targetZonePctLow]);
 
-  const handleChange = (v: number) => {
-    setIntensity(v);
+  const handleCommit = (v: number) => {
     if (!rideId) return;
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => reanalyze(rideId, v), 500);
+    reanalyze(rideId, v);
   };
 
   return (
@@ -85,7 +82,7 @@ export function Header() {
             {isReanalyzing && <span style={{ marginLeft: 5, color: 'var(--accent-gold)' }}>⟳</span>}
           </span>
         </div>
-        <IntensitySlider value={intensity} onChange={handleChange} compact step={0.5} />
+        <IntensitySlider value={intensity} onChange={setIntensity} onCommit={handleCommit} compact step={0.5} />
       </div>
 
       <div style={{ flexShrink: 0, marginLeft: 'auto' }}>

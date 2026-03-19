@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAnalysisStore } from './store/analysisStore';
+import { useStrava } from './hooks/useStrava';
 import { UploadForm } from './components/upload/UploadForm';
 import { LoadingScreen } from './components/loading/LoadingScreen';
 import { Header } from './components/layout/Header';
@@ -40,6 +41,18 @@ function ResultsView() {
 
 export default function App() {
   const { appState } = useAnalysisStore();
+  const { handleCallback } = useStrava();
+
+  // Handle Strava OAuth redirect (Strava sends ?code=...&state=carbmaps back to the app origin)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code   = params.get('code');
+    const state  = params.get('state');
+    if (code && state === 'carbmaps') {
+      window.history.replaceState({}, '', window.location.pathname);
+      handleCallback(code).catch(console.error);
+    }
+  }, []);
 
   return (
     /* Page wrapper — warm parchment bg with centered widget */

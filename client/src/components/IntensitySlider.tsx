@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 
 // Slider range: 60–95 FTP %
 export const SLIDER_MIN = 60;
@@ -25,13 +25,15 @@ function toPos(pct: number): number {
 interface Props {
   value: number;
   onChange: (v: number) => void;
+  onCommit?: (v: number) => void;  // fires once on pointer/touch release
   step?: number;
   compact?: boolean;
 }
 
-export function IntensitySlider({ value, onChange, step = 0.5, compact = false }: Props) {
-  const zoneName = ftpPctToZoneName(value);
-  const fillPct  = toPos(value);
+export function IntensitySlider({ value, onChange, onCommit, step = 0.5, compact = false }: Props) {
+  const zoneName   = ftpPctToZoneName(value);
+  const fillPct    = toPos(value);
+  const latestRef  = useRef(value); // always holds the most recent value from onChange
 
   return (
     <div style={{ width: '100%' }}>
@@ -109,7 +111,9 @@ export function IntensitySlider({ value, onChange, step = 0.5, compact = false }
         max={SLIDER_MAX}
         step={step}
         value={value}
-        onChange={e => onChange(parseFloat(e.target.value))}
+        onChange={e => { const v = parseFloat(e.target.value); latestRef.current = v; onChange(v); }}
+        onPointerUp={() => onCommit?.(latestRef.current)}
+        onKeyUp={() => onCommit?.(latestRef.current)}
       />
 
       {!compact && (

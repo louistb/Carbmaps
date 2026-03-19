@@ -26,6 +26,7 @@ export interface LocalRide {
   totalDistanceKm: number;
   climbCount: number;
   analysisResult: AnalysisResult;
+  stravaRouteId?: string; // set for Strava-imported routes; used for reanalysis
 }
 
 export function listLocalRides(): LocalRide[] {
