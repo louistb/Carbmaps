@@ -7,6 +7,7 @@ import { IntensitySlider } from '../IntensitySlider';
 import { StravaConnect } from '../strava/StravaConnect';
 import { useStrava } from '../../hooks/useStrava';
 import type { StravaRoute } from '../../hooks/useStrava';
+import { analytics } from '../../lib/analytics';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 18 },
@@ -110,10 +111,12 @@ export function UploadForm() {
       : undefined;
 
     if (selectedRoute) {
+      analytics.rideAnalysisStart('strava');
       await analyzeRoute(selectedRoute.id, selectedRoute.name, parseFloat(ftp), parseFloat(weight), intensity, startDateTime);
       return;
     }
     if (!file) return;
+    analytics.rideAnalysisStart('gpx');
     const fd = new FormData();
     fd.append('gpxFile', file);
     fd.append('ftpWatts', ftp);

@@ -6,6 +6,7 @@ import {
   getValidAccessToken, isStravaConnected, getStravaTokens,
 } from '../lib/stravaAuth';
 import { saveLocalRide, saveLocalGpx } from '../lib/localRides';
+import { analytics } from '../lib/analytics';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
@@ -26,6 +27,7 @@ export function useStrava() {
   const { setAppState, setResult, setError } = useAnalysisStore();
 
   const connect = useCallback(async () => {
+    analytics.stravaConnectClick();
     const res = await fetch(
       `${API_BASE}/api/strava/auth?redirect_uri=${encodeURIComponent(window.location.origin)}`,
     );
@@ -43,6 +45,7 @@ export function useStrava() {
     const tokens = await res.json();
     saveStravaTokens(tokens);
     setConnected(true);
+    analytics.stravaConnected();
   }, []);
 
   const disconnect = useCallback(() => {
