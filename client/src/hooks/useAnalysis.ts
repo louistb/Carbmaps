@@ -5,7 +5,7 @@ import { listLocalRides, saveLocalRide, getLocalRide, deleteLocalRide, updateLoc
 const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
 export function useAnalysis() {
-  const { setAppState, setResult, setError, setSavedRides, updateResult, setIsReanalyzing } = useAnalysisStore();
+  const { setAppState, setResult, setError, setSavedRides, updateResult, setIsReanalyzing, result } = useAnalysisStore();
 
   const refreshList = () => setSavedRides(listLocalRides());
 
@@ -55,10 +55,40 @@ export function useAnalysis() {
 
   const fetchSavedRides = () => refreshList();
 
+  const refreshWeather = async (rideId: string) => {
+    const ride    = getLocalRide(rideId);
+    const gpxText = getLocalGpx(rideId);
+    if (!ride || !gpxText) return;
+
+    try {
+      const fd = new FormData();
+      fd.append('gpxFile', new Blob([gpxText], { type: 'application/gpx+xml' }), `${rideId}.gpx`);
+      fd.append('ftpWatts',     String(ride.ftpWatts));
+      fd.append('weightKg',     String(ride.weightKg));
+      fd.append('intensity',    String(ride.intensity));
+      fd.append('startDateTime', new Date().toISOString());
+
+      const res = await axios.post(`${API_BASE}/api/rides/${rideId}/weather`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 15000,
+      });
+
+      if (res.data.weather) {
+        const current = useAnalysisStore.getState().result;
+        if (current) {
+          const updated = { ...current, weather: res.data.weather };
+          updateResult(updated);
+          updateLocalRide(rideId, updated, ride.intensity);
+        }
+      }
+    } catch { /* silent — stale weather stays */ }
+  };
+
   const loadRide = (id: string) => {
     const ride = getLocalRide(id);
     if (!ride) { setError('Ride not found.'); return; }
     setResult(ride.analysisResult, ride.id);
+    refreshWeather(id); // background — updates weather once fetched
   };
 
   const deleteRide = (id: string) => {
@@ -83,7 +113,7 @@ export function useAnalysis() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const { pacing, climbs, nutrition, weather, routePoints } = res.data;
-      const analysisResult = { pacing, climbs, nutrition, weather, routePoints: routePoints ?? [] };
+      const analysisResult = { pacing, climbs, nutrition, weather: weather ?? result?.weather ?? null, routePoints: routePoints ?? [] };
       updateLocalRide(rideId, analysisResult, intensity);
       updateResult(analysisResult);
       refreshList();

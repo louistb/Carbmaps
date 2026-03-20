@@ -50,7 +50,7 @@ export function ClimbsTab({ data, routePoints }: Props) {
         {climbs.length} climb{climbs.length > 1 ? 's' : ''} detected · gradients ≥4% over ≥500m
       </div>
 
-      <div style={{
+      <div className="climbs-layout" style={{
         display: 'flex', gap: 0, alignItems: 'stretch',
         border: '1.5px solid var(--border-subtle)',
         borderRadius: 'var(--radius-md)', overflow: 'hidden',
@@ -59,7 +59,7 @@ export function ClimbsTab({ data, routePoints }: Props) {
       }}>
 
         {/* Climb list */}
-        <div style={{ width: '270px', flexShrink: 0, borderRight: '1.5px solid var(--border-subtle)', overflowY: 'auto', maxHeight: '440px' }}>
+        <div className="climbs-list" style={{ width: '270px', flexShrink: 0, borderRight: '1.5px solid var(--border-subtle)', overflowY: 'auto', maxHeight: '440px' }}>
           {climbs.map((climb, idx) => {
             const fillPct    = Math.min(climb.avgGradientPct / 15 * 100, 100);
             const maxFillPct = Math.min(climb.maxGradientPct / 15 * 100, 100);
@@ -116,11 +116,11 @@ export function ClimbsTab({ data, routePoints }: Props) {
 
         {/* Map */}
         {routePoints.length >= 2 ? (
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="climbs-map-wrap" style={{ flex: 1, minWidth: 0 }}>
             <ClimbsMap points={routePoints} climbs={climbs} hoveredClimbIdx={hoveredClimbIdx} />
           </div>
         ) : (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontFamily: ral, fontSize: '0.8rem' }}>
+          <div className="climbs-map-wrap" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontFamily: ral, fontSize: '0.8rem' }}>
             No map data
           </div>
         )}

@@ -49,6 +49,9 @@ html, body {
   background-color: var(--bg-base);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+  /* iPhone safe areas */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 #root {
@@ -215,3 +218,121 @@ tr:hover td { background: var(--bg-hover); }
 }
 
 .stat-card::before { display: none; }
+
+/* ── Mobile / iPhone responsive ── */
+@media (max-width: 600px) {
+  /* App wrapper: remove side margin on small phones */
+  .app-card {
+    margin: 0.5rem 0.25rem !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  /* Header: single slider, reorder on mobile */
+  .header-logo { order: 1; }
+
+  .header-home-btn {
+    order: 2;
+    margin-left: 0 !important;
+  }
+
+  .header-slider-block {
+    order: 3;
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Swap stats variant */
+  .header-stats-full    { display: none !important; }
+  .header-stats-compact { display: block !important; }
+
+  /* ClimbsTab: stack list above map */
+  .climbs-layout {
+    flex-direction: column !important;
+  }
+
+  .climbs-list {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1.5px solid var(--border-subtle) !important;
+    max-height: 260px !important;
+  }
+
+  .climbs-map-wrap {
+    min-height: 260px;
+  }
+
+  /* Stats grid: 2 columns on mobile */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Cue sheet: hide preview card on mobile */
+  .cue-sheet-preview {
+    display: none !important;
+  }
+
+  /* Metric labels: use short version on mobile */
+  .metric-label-full { display: none !important; }
+  .metric-label-short { display: inline !important; }
+
+  /* PacingTab: reduce padding */
+  .pacing-tab-content {
+    padding: 1rem !important;
+    gap: 1rem !important;
+  }
+
+  /* RidePlanCard top: stack zone above metrics row */
+  .ride-plan-top {
+    flex-direction: column !important;
+  }
+
+  .ride-plan-top > div:first-child {
+    border-right: none !important;
+    border-bottom: 1.5px solid var(--border-subtle) !important;
+  }
+
+  /* 4 metrics in a single row */
+  .ride-plan-metrics {
+    flex-wrap: nowrap !important;
+  }
+
+  .ride-plan-metric-item {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    padding: 0.65rem 0.5rem !important;
+    border-right: 1px solid var(--border-subtle) !important;
+    border-bottom: none !important;
+  }
+
+  .ride-plan-metric-item:last-child {
+    border-right: none !important;
+  }
+
+  /* Terrain grid: single column on mobile */
+  .terrain-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .terrain-grid > div {
+    border-right: none !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+  }
+
+  .terrain-grid > div:last-child {
+    border-bottom: none !important;
+  }
+
+  /* Tab bar: slightly smaller text */
+  .tab-bar-btn {
+    font-size: 0.6rem !important;
+    padding: 0.6rem 0.75rem !important;
+  }
+}
+
+/* iPhone home-bar safe area at bottom */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .tab-bar {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

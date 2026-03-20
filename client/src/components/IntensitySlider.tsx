@@ -80,6 +80,20 @@ export function IntensitySlider({ value, onChange, onCommit, step = 0.5, compact
           cursor: pointer;
           box-shadow: 0 1px 4px rgba(201,169,110,0.4);
         }
+        @media (max-width: 600px) {
+          .intensity-range::-webkit-slider-thumb {
+            width: 22px;
+            height: 22px;
+            margin-top: -9.5px;
+          }
+          .intensity-range::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+          }
+          .intensity-range::-webkit-slider-runnable-track {
+            height: 3px;
+          }
+        }
       `}</style>
 
       {!compact && (

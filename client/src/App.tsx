@@ -63,7 +63,7 @@ export default function App() {
       alignItems: 'center',
       background: 'var(--bg-base)',
     }}>
-      <div style={{
+      <div className="app-card" style={{
         width: '100%',
         maxWidth: '960px',
         background: 'var(--bg-surface)',

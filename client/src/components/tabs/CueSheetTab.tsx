@@ -243,7 +243,7 @@ function PreviewCard({ pacing, climbs, nutrition, routePoints }: Props) {
   const s = (n: number) => n * 2.8; // scale pt → px for preview
 
   return (
-    <div style={{ width: '100%', maxWidth: 720, background: '#fff', fontFamily: ral, border: '1px solid #e0e0e0', display: 'flex', flexDirection: 'column', boxShadow: '0 4px 24px rgba(26,26,24,0.12)' }}>
+    <div style={{ width: '100%', minWidth: 480, maxWidth: 720, background: '#fff', fontFamily: ral, border: '1px solid #e0e0e0', display: 'flex', flexDirection: 'column', boxShadow: '0 4px 24px rgba(26,26,24,0.12)' }}>
 
       {/* Header */}
       <div style={{ background: '#1A1A18', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: `${s(2.5)}px ${s(6)}px`, gap: s(4) }}>
@@ -345,12 +345,14 @@ export function CueSheetTab({ pacing, climbs, nutrition, routePoints }: Props) {
         </button>
       </div>
 
-      {/* Preview */}
-      <div style={{ background: '#fff', border: '1.5px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', boxShadow: '0 1px 4px rgba(26,26,24,0.06)' }}>
+      {/* Preview — hidden on mobile */}
+      <div className="cue-sheet-preview" style={{ background: '#fff', border: '1.5px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 1px 4px rgba(26,26,24,0.06)' }}>
         <div style={{ fontFamily: ral, fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
           Preview — actual card is 4 × 2 inches
         </div>
-        <PreviewCard pacing={pacing} climbs={climbs} nutrition={nutrition} routePoints={routePoints} />
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <PreviewCard pacing={pacing} climbs={climbs} nutrition={nutrition} routePoints={routePoints} />
+        </div>
       </div>
 
       {/* Tips */}

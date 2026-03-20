@@ -14,26 +14,28 @@ export function TabBar() {
   const tabs = ALL_TABS.filter(t => t.id !== 'weather' || !!result?.weather);
 
   return (
-    <nav style={{
+    <nav className="tab-bar" style={{
       background: '#fff',
       borderBottom: '1.5px solid var(--border-subtle)',
-      padding: '0 1.5rem',
+      padding: '0 1rem',
       display: 'flex',
       gap: 0,
       overflowX: 'auto',
+      WebkitOverflowScrolling: 'touch',
     }}>
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
           <button
             key={tab.id}
+            className="tab-bar-btn"
             onClick={() => setActiveTab(tab.id)}
             style={{
               background: 'transparent',
               border: 'none',
               borderBottom: isActive ? '2.5px solid var(--accent-gold)' : '2.5px solid transparent',
               color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
-              padding: '0.85rem 1.4rem',
+              padding: '0.85rem 1.1rem',
               fontFamily: "'Raleway', sans-serif",
               fontSize: '0.72rem',
               fontWeight: isActive ? 800 : 600,

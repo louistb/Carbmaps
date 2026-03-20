@@ -88,10 +88,10 @@ function RidePlanCard({
   ];
 
   return (
-    <div style={{ border: '1.5px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: '0 1px 6px rgba(26,26,24,0.07)' }}>
+    <div className="ride-plan-card" style={{ border: '1.5px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: '0 1px 6px rgba(26,26,24,0.07)' }}>
 
       {/* Top: zone label + key metrics */}
-      <div style={{ display: 'flex', alignItems: 'stretch', borderBottom: '1.5px solid var(--border-subtle)' }}>
+      <div className="ride-plan-top" style={{ display: 'flex', alignItems: 'stretch', borderBottom: '1.5px solid var(--border-subtle)' }}>
         <div style={{ padding: '1.1rem 1.25rem', borderRight: '1.5px solid var(--border-subtle)', flexShrink: 0, background: 'var(--bg-elevated)' }}>
           <div style={{ fontFamily: ral, fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
             Target Zone
@@ -104,20 +104,21 @@ function RidePlanCard({
           </div>
         </div>
 
-        <div style={{ display: 'flex', flex: 1 }}>
+        <div className="ride-plan-metrics" style={{ display: 'flex', flex: 1, flexWrap: 'wrap' }}>
           {[
-            { label: 'Norm. Power', value: `${normalizedPowerW}W` },
-            { label: 'Int. Factor', value: intensityFactor.toFixed(2) },
-            { label: 'TSS',         value: String(tss) },
-            { label: 'Duration',    value: formatTime(estimatedTotalTimeMin) },
-          ].map(({ label, value }, i, arr) => (
-            <div key={label} style={{
+            { label: 'Norm. Power', shortLabel: 'NP',  value: `${normalizedPowerW}W` },
+            { label: 'Int. Factor', shortLabel: 'IF',  value: intensityFactor.toFixed(2) },
+            { label: 'TSS',         shortLabel: 'TSS', value: String(tss) },
+            { label: 'Duration',    shortLabel: 'Time', value: formatTime(estimatedTotalTimeMin) },
+          ].map(({ label, shortLabel, value }, i, arr) => (
+            <div key={label} className="ride-plan-metric-item" style={{
               flex: 1, padding: '1rem',
               borderRight: i < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none',
               display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4,
             }}>
-              <div style={{ fontFamily: ral, fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                {label}
+              <div style={{ fontFamily: ral, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                <span className="metric-label-full" style={{ fontSize: '0.58rem', fontWeight: 700 }}>{label}</span>
+                <span className="metric-label-short" style={{ fontSize: '0.58rem', fontWeight: 700, display: 'none' }}>{shortLabel}</span>
               </div>
               <div style={{ fontFamily: ral, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
                 {value}
@@ -159,7 +160,7 @@ function RidePlanCard({
       </div>
 
       {/* Terrain cues */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', background: 'var(--bg-elevated)' }}>
+      <div className="terrain-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', background: 'var(--bg-elevated)' }}>
         {terrain.map(({ label, sub, watts, pct, cue, icon }, i, arr) => (
           <div key={label} style={{ padding: '0.875rem 1.1rem', borderRight: i < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', marginBottom: '0.3rem' }}>
@@ -389,7 +390,7 @@ export function PacingTab({ data, routePoints }: { data: PacingResult; routePoin
   const holdBackCount = segments.filter(s => s.flag === 'hold-back').length;
 
   return (
-    <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.75rem', background: 'var(--bg-base)' }}>
+    <div className="pacing-tab-content" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.75rem', background: 'var(--bg-base)' }}>
 
       <RidePlanCard segments={segments} normalizedPowerW={normalizedPowerW} intensityFactor={intensityFactor} tss={tss}
         estimatedTotalTimeMin={estimatedTotalTimeMin} targetZoneLabel={targetZoneLabel}

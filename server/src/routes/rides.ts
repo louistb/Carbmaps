@@ -4,6 +4,7 @@ import { parseRoute } from '../ingestion';
 import { runPacingEngine } from '../engines/pacing.engine';
 import { runClimbsEngine } from '../engines/climbs.engine';
 import { runNutritionEngine } from '../engines/nutrition.engine';
+import { runWeatherEngine } from '../engines/weather.engine';
 import { RiderSettings } from '../types/rider.types';
 import { RoutePoint } from '../types/route.types';
 import { MapPoint } from '../types/analysis.types';
@@ -22,6 +23,36 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 
 // DELETE /api/rides/:id — nothing stored server-side, always succeeds
 router.delete('/:id', (_req: Request, res: Response) => {
   res.json({ success: true });
+});
+
+// POST /api/rides/:id/weather — refresh weather using current time as start
+router.post('/:id/weather', upload.single('gpxFile'), async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.file) { res.status(400).json({ error: 'GPX file is required' }); return; }
+
+    const { ftpWatts, weightKg, intensity, startDateTime } = req.body;
+    const ftp        = parseFloat(ftpWatts);
+    const weight     = parseFloat(weightKg);
+    const intensityN = parseFloat(intensity);
+    if (isNaN(ftp) || isNaN(weight) || isNaN(intensityN)) {
+      res.status(400).json({ error: 'ftpWatts, weightKg and intensity are required' }); return;
+    }
+    if (!startDateTime || isNaN(Date.parse(startDateTime))) {
+      res.status(400).json({ error: 'startDateTime must be a valid ISO 8601 string' }); return;
+    }
+
+    const rider = { ftpWatts: ftp, weightKg: weight, intensity: intensityN, startDateTime } as RiderSettings & { startDateTime: string };
+    const route   = parseRoute(req.file.originalname, req.file.buffer);
+    const pacing  = runPacingEngine(route, rider);
+    const climbs  = runClimbsEngine(route, rider, pacing);
+    const weather = await runWeatherEngine(route, rider, pacing, climbs);
+
+    res.json({ weather });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Weather refresh failed';
+    console.error('Weather refresh error:', err);
+    res.status(500).json({ error: message });
+  }
 });
 
 // POST /api/rides/:id/reanalyze — re-run engines with new intensity
