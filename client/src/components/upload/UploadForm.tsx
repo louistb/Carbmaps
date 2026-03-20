@@ -142,57 +142,60 @@ export function UploadForm() {
         transition={{ duration: 0.5, ease: 'easeOut' }}
         style={{
           textAlign: 'center',
-          padding: '5rem 1rem 3.5rem',
+          padding: '2.5rem 1rem 2rem',
           width: '100%',
-          maxWidth: '560px',
+          maxWidth: '720px',
         }}
       >
+        {/* Brand lockup: logo + title inline */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginBottom: '0.6rem' }}>
+          <img
+            src="/logo.png"
+            alt="CarbMaps logo"
+            style={{
+              width: 100,
+              height: 100,
+              objectFit: 'contain',
+              mixBlendMode: 'multiply',
+              opacity: 0.85,
+              flexShrink: 0,
+            }}
+          />
+          <h1 style={{
+            fontFamily: "'MedievalSharp', cursive",
+            fontSize: 'clamp(2.5rem, 6vw, 4rem)',
+            fontWeight: 400,
+            letterSpacing: '0.02em',
+            color: 'var(--text-primary)',
+            lineHeight: 1,
+            margin: 0,
+          }}>
+            CarbMaps
+          </h1>
+        </div>
+
         <div style={{
-          display: 'inline-block',
           fontFamily: "'Raleway', sans-serif",
           fontSize: '0.65rem',
           fontWeight: 700,
           letterSpacing: '0.2em',
           textTransform: 'uppercase',
           color: 'var(--accent-gold)',
-          marginBottom: '1.25rem',
+          marginBottom: '0.5rem',
         }}>
           Eat carbs, ride hard
         </div>
-        <h1 style={{
-          fontFamily: "'MedievalSharp', cursive",
-          fontSize: 'clamp(3.5rem, 10vw, 6rem)',
-          fontWeight: 400,
-          letterSpacing: '0.02em',
-          color: 'var(--text-primary)',
-          lineHeight: 1,
-          marginBottom: '1.25rem',
-        }}>
-          CarbMaps
-        </h1>
+
         <div style={{
           fontFamily: "'Raleway', sans-serif",
           fontSize: '0.62rem',
           fontWeight: 600,
           letterSpacing: '0.1em',
           color: 'var(--text-muted)',
-          marginBottom: '1rem',
           opacity: 0.7,
         }}>
           v{__APP_VERSION__}
         </div>
-
-        <p style={{
-          fontFamily: "'Raleway', sans-serif",
-          color: 'var(--text-muted)',
-          fontSize: '1rem',
-          fontWeight: 400,
-          lineHeight: 1.6,
-          maxWidth: '380px',
-          margin: '0 auto',
-        }}>
-          Drop your route. Get your pacing plan, nutrition strategy, and weather forecast — all in one.
-        </p>
       </motion.div>
 
       {/* Form */}
@@ -201,35 +204,40 @@ export function UploadForm() {
         variants={stagger}
         initial="hidden"
         animate="show"
-        style={{ width: '100%', maxWidth: '520px', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+        style={{ width: '100%', maxWidth: '720px', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
       >
 
-        {/* Strava import */}
-        <motion.div variants={fadeUp}>
-          <StravaConnect
-            onSelect={handleSelectRoute}
-            selectedRouteId={selectedRoute?.id ?? null}
-          />
-        </motion.div>
-
-        {/* Divider */}
-        <motion.div variants={fadeUp} style={{
-          display: 'flex', alignItems: 'center', gap: '0.75rem',
+        {/* Strava + GPX side by side */}
+        <motion.div variants={fadeUp} className="route-picker" style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0,1fr) auto minmax(0,1fr)',
+          gap: '0',
+          alignItems: 'stretch',
         }}>
-          <div style={{ flex: 1, height: 1, background: 'var(--border-subtle)' }} />
-          <span style={{
-            fontFamily: "'Raleway', sans-serif",
-            fontSize: '0.65rem',
-            fontWeight: 600,
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            color: 'var(--text-muted)',
-          }}>or upload a file</span>
-          <div style={{ flex: 1, height: 1, background: 'var(--border-subtle)' }} />
-        </motion.div>
+          {/* Strava panel */}
+          <div>
+            <StravaConnect
+              onSelect={handleSelectRoute}
+              selectedRouteId={selectedRoute?.id ?? null}
+            />
+          </div>
 
-        {/* Drop zone */}
-        <motion.div variants={fadeUp}>
+          {/* Vertical OR divider */}
+          <div className="or-divider" style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            justifyContent: 'center', padding: '0 1.25rem', gap: '0.5rem',
+          }}>
+            <div style={{ flex: 1, width: 1, background: 'var(--border-subtle)' }} />
+            <span style={{
+              fontFamily: "'Raleway', sans-serif",
+              fontSize: '0.6rem', fontWeight: 700,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: 'var(--text-muted)',
+            }}>or</span>
+            <div style={{ flex: 1, width: 1, background: 'var(--border-subtle)' }} />
+          </div>
+
+          {/* Drop zone panel */}
           <div
             onDrop={selectedRoute ? undefined : handleDrop}
             onDragOver={selectedRoute ? undefined : e => { e.preventDefault(); setDragging(true); }}
@@ -239,12 +247,13 @@ export function UploadForm() {
               border: `2px dashed ${selectedRoute ? 'var(--border-subtle)' : dragging ? 'var(--accent-gold)' : file ? 'var(--accent-gold)' : 'var(--border-subtle)'}`,
               borderRadius: 'var(--radius-md)',
               background: selectedRoute ? 'var(--bg-elevated)' : dragging ? '#FBF3E4' : file ? '#FFFCF5' : '#fff',
-              padding: '2.5rem 1.5rem',
+              padding: '2rem 1.25rem',
               textAlign: 'center',
               cursor: selectedRoute ? 'not-allowed' : 'pointer',
               transition: 'all 0.18s',
               opacity: selectedRoute ? 0.45 : 1,
               pointerEvents: selectedRoute ? 'none' : 'auto',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
             <input ref={fileInputRef} type="file" accept=".gpx,.fit,.tcx"
@@ -398,7 +407,7 @@ export function UploadForm() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5, duration: 0.4 }}
-        style={{ width: '100%', maxWidth: '520px', marginTop: '2rem' }}
+        style={{ width: '100%', maxWidth: '720px', marginTop: '2rem' }}
       >
         <SavedRidesList />
       </motion.div>
