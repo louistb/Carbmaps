@@ -91,7 +91,7 @@ export function StravaConnect({ onSelect, selectedRouteId }: Props) {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: 1, minWidth: 0, overflow: 'hidden' }}>
-              <StravaLogo color={STRAVA_ORANGE} size={18} style={{ flexShrink: 0 }} />
+              <div style={{ flexShrink: 0 }}><StravaLogo color={STRAVA_ORANGE} size={18} /></div>
               <span style={{
                 fontFamily: "'Raleway', sans-serif",
                 fontWeight: 700,
