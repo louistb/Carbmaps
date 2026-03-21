@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAnalysisStore } from '../../store/analysisStore';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { IntensitySlider, ftpPctToZoneName } from '../IntensitySlider';
+import { PoweredByStrava } from '../strava/StravaConnect';
+import { getLocalRide } from '../../lib/localRides';
 
 export function Header() {
   const { reset, rideId, isReanalyzing, result } = useAnalysisStore();
@@ -20,6 +22,21 @@ export function Header() {
   const [weatherTime, setWeatherTime] = useState(initTime);
   const [isRefreshingWeather, setIsRefreshingWeather] = useState(false);
   const [weatherOpen, setWeatherOpen] = useState(false);
+  const [rateLimitResetAt, setRateLimitResetAt] = useState<number | null>(null);
+
+  // Countdown: seconds remaining until rate limit resets
+  const [rateLimitSecsLeft, setRateLimitSecsLeft] = useState(0);
+  useEffect(() => {
+    if (!rateLimitResetAt) return;
+    const tick = () => {
+      const left = rateLimitResetAt - Math.floor(Date.now() / 1000);
+      if (left <= 0) { setRateLimitResetAt(null); return; }
+      setRateLimitSecsLeft(left);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [rateLimitResetAt]);
 
   // Sync inputs when a new result loads (e.g. opening a saved ride)
   useEffect(() => {
@@ -43,21 +60,32 @@ export function Header() {
     }
   };
 
+  const isStravaRide = !!(rideId && getLocalRide(rideId)?.stravaRouteId);
+
   const initIntensity = result
     ? (result.pacing.targetZonePctLow + result.pacing.targetZonePctHigh) / 2
     : 70;
 
   const [intensity, setIntensity] = useState(initIntensity);
+  const lastAnalyzedIntensity = useRef(initIntensity);
 
+  // Only sync slider when a different ride loads — not after reanalysis of the same ride
+  const prevRideId = useRef<string | null>(null);
   useEffect(() => {
-    if (result) {
-      setIntensity((result.pacing.targetZonePctLow + result.pacing.targetZonePctHigh) / 2);
+    if (result && rideId !== prevRideId.current) {
+      prevRideId.current = rideId;
+      const v = (rideId && getLocalRide(rideId)?.intensity) ??
+        (result.pacing.targetZonePctLow + result.pacing.targetZonePctHigh) / 2;
+      setIntensity(v);
+      lastAnalyzedIntensity.current = v;
     }
-  }, [result?.pacing.targetZonePctLow]);
+  }, [rideId, result]);
 
-  const handleCommit = (v: number) => {
-    if (!rideId) return;
-    reanalyze(rideId, v);
+  const handleCommit = async (v: number) => {
+    if (!rideId || v === lastAnalyzedIntensity.current) return;
+    lastAnalyzedIntensity.current = v;
+    const { rateLimitResetAt: resetAt } = await reanalyze(rideId, v);
+    if (resetAt) setRateLimitResetAt(resetAt);
   };
 
   const totalKm = result?.pacing.segments.length
@@ -107,6 +135,7 @@ export function Header() {
         }}>
           Eat carbs, ride hard
         </div>
+        {isStravaRide && <div style={{ marginTop: 6 }}><PoweredByStrava /></div>}
       </div>
 
       {/* Slider block — order 2 on desktop, order 3 (full width) on mobile */}
@@ -151,12 +180,40 @@ export function Header() {
           <span style={{ fontFamily: ral, fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
             Intensity
           </span>
-          <span style={{ fontFamily: ral, fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <span style={{ fontFamily: ral, fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             {ftpPctToZoneName(intensity)} · {intensity.toFixed(1)}%
-            {isReanalyzing && <span style={{ marginLeft: 5, color: 'var(--accent-gold)' }}>⟳</span>}
+            {isReanalyzing && !isStravaRide && <span style={{ color: 'var(--accent-gold)' }}>⟳</span>}
+            {isReanalyzing && isStravaRide && (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                background: '#FEF0E8', color: '#FC4C02',
+                fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.06em',
+                padding: '0.15rem 0.45rem', borderRadius: 4,
+              }}>
+                <svg width={9} height={9} viewBox="0 0 24 24" fill="#FC4C02" style={{ flexShrink: 0 }}>
+                  <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
+                </svg>
+                Fetching…
+              </span>
+            )}
           </span>
         </div>
         <IntensitySlider value={intensity} onChange={setIntensity} onCommit={handleCommit} compact step={0.5} />
+        {rateLimitResetAt && (
+          <div style={{
+            marginTop: '0.5rem',
+            fontFamily: ral,
+            fontSize: '0.65rem',
+            color: '#b45309',
+            background: '#fef3c7',
+            border: '1px solid #fde68a',
+            borderRadius: 'var(--radius-sm)',
+            padding: '0.3rem 0.6rem',
+          }}>
+            That's a lot of requests, please slow down 🤠
+            {' '}— try again in {Math.floor(rateLimitSecsLeft / 60)}:{String(rateLimitSecsLeft % 60).padStart(2, '0')}
+          </div>
+        )}
       </div>
 
       {/* Home button — order 3 on desktop, order 2 on mobile */}

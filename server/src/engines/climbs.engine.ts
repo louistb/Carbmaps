@@ -13,9 +13,9 @@ export function runClimbsEngine(
   pacing: PacingResult
 ): ClimbsResult {
   const { ftpWatts, intensity } = rider;
-  // intensity is a continuous FTP % (60–95); derive climb suggestion power as ±3.5% band midpoint × 1.075
+  // intensity is a continuous FTP % (50–110); derive climb suggestion power as ±3.5% band midpoint × 1.075
   const band = 3.5;
-  const midZonePct = clamp(intensity, 55, 100) / 100;
+  const midZonePct = clamp(intensity, 50, 110) / 100;
   const climbPowerFactor = clamp((midZonePct + band / 100) * 1.075, 0, 1.05);
 
   const segments = pacing.segments;

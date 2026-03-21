@@ -1,21 +1,23 @@
 import React, { useRef } from 'react';
 
-// Slider range: 60–95 FTP %
-export const SLIDER_MIN = 60;
-export const SLIDER_MAX = 95;
+// Slider range: 50–110 FTP %
+export const SLIDER_MIN = 50;
+export const SLIDER_MAX = 110;
 
 const ZONES = [
-  { name: 'Casual',    from: 60, to: 65 },
-  { name: 'Endurance', from: 65, to: 75 },
-  { name: 'Tempo',     from: 75, to: 85 },
-  { name: 'Race',      from: 88, to: 95 },
+  { name: 'Chill',        from: 50, to: 60 },
+  { name: 'Endurance',    from: 60, to: 75 },
+  { name: 'Tempo',        from: 75, to: 88 },
+  { name: 'Race',         from: 88, to: 100 },
+  { name: 'Overreaching', from: 100, to: 110 },
 ];
 
 export function ftpPctToZoneName(pct: number): string {
-  if (pct <= 63) return 'Casual';
-  if (pct <= 72) return 'Endurance';
-  if (pct <= 83) return 'Tempo';
-  return 'Race';
+  if (pct <= 58)  return 'Chill';
+  if (pct <= 72)  return 'Endurance';
+  if (pct <= 85)  return 'Tempo';
+  if (pct <= 100) return 'Race';
+  return 'Overreaching';
 }
 
 function toPos(pct: number): number {
@@ -97,11 +99,11 @@ export function IntensitySlider({ value, onChange, onCommit, step = 0.5, compact
       `}</style>
 
       {!compact && (
-        <div style={{ position: 'relative', height: 26, marginBottom: 4, overflow: 'hidden' }}>
+        <div style={{ position: 'relative', height: 26, marginBottom: 4 }}>
           <div style={{
             position: 'absolute',
             left: `${fillPct}%`,
-            transform: 'translateX(-50%)',
+            transform: fillPct < 12 ? 'translateX(0)' : fillPct > 88 ? 'translateX(-100%)' : 'translateX(-50%)',
             background: 'var(--accent-gold)',
             color: '#fff',
             fontFamily: "'Raleway', sans-serif",
@@ -127,18 +129,19 @@ export function IntensitySlider({ value, onChange, onCommit, step = 0.5, compact
         value={value}
         onChange={e => { const v = parseFloat(e.target.value); latestRef.current = v; onChange(v); }}
         onPointerUp={() => onCommit?.(latestRef.current)}
+        onTouchEnd={() => onCommit?.(latestRef.current)}
         onKeyUp={() => onCommit?.(latestRef.current)}
       />
 
       {!compact && (
-        <div style={{ position: 'relative', height: 20, marginTop: 4, overflow: 'hidden' }}>
+        <div style={{ position: 'relative', height: 20, marginTop: 4 }}>
           {ZONES.map(z => {
             const midPos = toPos((z.from + z.to) / 2);
             return (
               <span key={z.name} style={{
                 position: 'absolute',
                 left: `${midPos}%`,
-                transform: 'translateX(-50%)',
+                transform: midPos < 12 ? 'translateX(0)' : midPos > 88 ? 'translateX(-100%)' : 'translateX(-50%)',
                 fontFamily: "'Raleway', sans-serif",
                 fontSize: '0.62rem',
                 color: 'var(--text-muted)',

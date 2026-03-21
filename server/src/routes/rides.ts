@@ -65,8 +65,8 @@ router.post('/:id/reanalyze', upload.single('gpxFile'), async (req: Request, res
     }
 
     const intensityN = parseFloat(req.body.intensity);
-    if (isNaN(intensityN) || intensityN < 55 || intensityN > 100) {
-      res.status(400).json({ error: 'intensity must be a number between 55 and 100 (FTP %)' });
+    if (isNaN(intensityN) || intensityN < 50 || intensityN > 110) {
+      res.status(400).json({ error: 'intensity must be a number between 50 and 110 (FTP %)' });
       return;
     }
 

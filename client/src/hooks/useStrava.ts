@@ -5,7 +5,7 @@ import {
   saveStravaTokens, clearStravaTokens,
   getValidAccessToken, isStravaConnected, getStravaTokens,
 } from '../lib/stravaAuth';
-import { saveLocalRide, saveLocalGpx } from '../lib/localRides';
+import { saveLocalRide } from '../lib/localRides';
 import { analytics } from '../lib/analytics';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? '';
@@ -48,7 +48,17 @@ export function useStrava() {
     analytics.stravaConnected();
   }, []);
 
-  const disconnect = useCallback(() => {
+  const disconnect = useCallback(async () => {
+    const tokens = getStravaTokens();
+    if (tokens?.accessToken) {
+      try {
+        await fetch(`${API_BASE}/api/strava/deauthorize`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: tokens.accessToken }),
+        });
+      } catch { /* silent — tokens cleared regardless */ }
+    }
     clearStravaTokens();
     setConnected(false);
     setRoutes([]);
@@ -89,11 +99,8 @@ export function useStrava() {
         ...(startDateTime ? { startDateTime } : {}),
       });
 
-      const { rideId, pacing, climbs, nutrition, weather, routePoints, gpxData } = data;
+      const { rideId, pacing, climbs, nutrition, weather, routePoints } = data;
       const analysisResult = { pacing, climbs, nutrition, weather, routePoints: routePoints ?? [] };
-
-      // Cache as GPX so future reanalysis uses local storage instead of Strava API
-      if (gpxData) saveLocalGpx(rideId, gpxData);
 
       const lastSeg = pacing.segments[pacing.segments.length - 1];
       saveLocalRide({

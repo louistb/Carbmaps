@@ -459,6 +459,17 @@ export function UploadForm() {
           color: 'var(--text-muted)',
         }}>
           Vibe coded by Slimshader 🥴 with love
+          {' · '}
+          <a
+            href="/privacy"
+            style={{
+              color: 'var(--text-muted)',
+              textDecoration: 'none',
+              borderBottom: '1px solid var(--border-subtle)',
+            }}
+          >
+            Privacy Policy
+          </a>
         </p>
       </motion.div>
     </div>

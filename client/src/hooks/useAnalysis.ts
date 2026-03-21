@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { useAnalysisStore } from '../store/analysisStore';
 import { listLocalRides, saveLocalRide, getLocalRide, deleteLocalRide, updateLocalRide, saveLocalGpx, getLocalGpx } from '../lib/localRides';
+import { getValidAccessToken } from '../lib/stravaAuth';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
@@ -96,30 +97,53 @@ export function useAnalysis() {
     refreshList();
   };
 
-  const reanalyze = async (rideId: string, intensity: number) => {
+  const reanalyze = async (rideId: string, intensity: number): Promise<{ rateLimitResetAt?: number }> => {
     setIsReanalyzing(true);
     try {
-      const ride    = getLocalRide(rideId);
+      const ride = getLocalRide(rideId);
+      if (!ride) { setIsReanalyzing(false); return; }
+
+      let res;
       const gpxText = getLocalGpx(rideId);
-      if (!ride || !gpxText) { setIsReanalyzing(false); return; }
 
-      const fd = new FormData();
-      fd.append('gpxFile', new Blob([gpxText], { type: 'application/gpx+xml' }), `${rideId}.gpx`);
-      fd.append('ftpWatts', String(ride.ftpWatts));
-      fd.append('weightKg', String(ride.weightKg));
-      fd.append('intensity', String(intensity));
+      if (!gpxText && ride.stravaRouteId) {
+        // Strava route — re-fetch GPS from Strava API (no local cache per ToS)
+        const token = await getValidAccessToken();
+        if (!token) { setIsReanalyzing(false); return; }
+        res = await axios.post(`${API_BASE}/api/strava/analyze-route/${ride.stravaRouteId}`, {
+          access_token: token,
+          ftpWatts: ride.ftpWatts,
+          weightKg: ride.weightKg,
+          intensity,
+        });
+      } else {
+        if (!gpxText) { setIsReanalyzing(false); return; }
+        const fd = new FormData();
+        fd.append('gpxFile', new Blob([gpxText], { type: 'application/gpx+xml' }), `${rideId}.gpx`);
+        fd.append('ftpWatts', String(ride.ftpWatts));
+        fd.append('weightKg', String(ride.weightKg));
+        fd.append('intensity', String(intensity));
+        res = await axios.post(`${API_BASE}/api/rides/${rideId}/reanalyze`, fd, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
 
-      const res = await axios.post(`${API_BASE}/api/rides/${rideId}/reanalyze`, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
       const { pacing, climbs, nutrition, weather, routePoints } = res.data;
       const analysisResult = { pacing, climbs, nutrition, weather: weather ?? result?.weather ?? null, routePoints: routePoints ?? [] };
       updateLocalRide(rideId, analysisResult, intensity);
       updateResult(analysisResult);
       refreshList();
-    } catch { /* silent */ } finally {
+      return {};
+    } catch (e) {
+      if (axios.isAxiosError(e) && e.response?.status === 429) {
+        const resetHeader = e.response.headers['ratelimit-reset'];
+        const resetAt = resetHeader ? Number(resetHeader) : Math.floor(Date.now() / 1000) + 15 * 60;
+        return { rateLimitResetAt: resetAt };
+      }
+    } finally {
       setIsReanalyzing(false);
     }
+    return {};
   };
 
   return { analyze, fetchSavedRides, loadRide, deleteRide, reanalyze, refreshWeather };

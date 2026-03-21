@@ -12,6 +12,7 @@ import { ClimbsTab } from './components/tabs/ClimbsTab';
 import { NutritionTab } from './components/tabs/NutritionTab';
 import { WeatherTab } from './components/tabs/WeatherTab';
 import { CueSheetTab } from './components/tabs/CueSheetTab';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
 
 const tabVariants = {
   initial: { opacity: 0, y: 6 },
@@ -41,6 +42,8 @@ function ResultsView() {
 }
 
 export default function App() {
+  if (window.location.pathname === '/privacy') return <PrivacyPolicy />;
+
   const { appState, rideId, reset } = useAnalysisStore();
   const { handleCallback } = useStrava();
   const { loadRide } = useAnalysis();

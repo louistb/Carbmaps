@@ -18,4 +18,11 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    port: 5173,
+  },
+  build: {
+    rollupOptions: {},
+  },
+  appType: 'spa', // ensures /privacy falls back to index.html in dev and preview
 });

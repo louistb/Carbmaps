@@ -26,6 +26,10 @@ export function StravaConnect({ onSelect, selectedRouteId }: Props) {
   const [open, setOpen] = useState(connected);
 
   useEffect(() => {
+    if (connected) setOpen(true);
+  }, [connected]);
+
+  useEffect(() => {
     if (open && connected && routes.length === 0) fetchRoutes();
   }, [open, connected]);
 
@@ -42,27 +46,20 @@ export function StravaConnect({ onSelect, selectedRouteId }: Props) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '0.6rem',
-            background: STRAVA_ORANGE,
+            background: 'none',
             border: 'none',
-            borderRadius: 'var(--radius-md)',
-            padding: '0.85rem 1.25rem',
+            padding: 0,
             cursor: 'pointer',
             transition: 'opacity 0.15s',
           }}
           onMouseEnter={e => (e.currentTarget.style.opacity = '0.88')}
           onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
         >
-          <StravaLogo />
-          <span style={{
-            fontFamily: "'Raleway', sans-serif",
-            fontWeight: 700,
-            fontSize: '0.85rem',
-            letterSpacing: '0.06em',
-            color: '#fff',
-          }}>
-            Connect with Strava
-          </span>
+          <img
+            src="/btn_strava_connect_with_orange.svg"
+            alt="Connect with Strava"
+            style={{ height: 48, display: 'block' }}
+          />
         </button>
       )}
 
@@ -280,6 +277,16 @@ export function StravaConnect({ onSelect, selectedRouteId }: Props) {
                       </div>
                     ))}
                   </div>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    alignItems: 'center',
+                    padding: '0.4rem 1.125rem',
+                    borderTop: '1px solid var(--border-subtle)',
+                    background: 'var(--bg-elevated)',
+                  }}>
+                    <PoweredByStrava />
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -287,6 +294,23 @@ export function StravaConnect({ onSelect, selectedRouteId }: Props) {
         </div>
       )}
     </div>
+  );
+}
+
+export function PoweredByStrava() {
+  return (
+    <a
+      href="https://www.strava.com"
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}
+    >
+      <img
+        src="/powered-by-strava.svg"
+        alt="Powered by Strava"
+        style={{ height: 14, display: 'block' }}
+      />
+    </a>
   );
 }
 
