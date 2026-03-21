@@ -1,6 +1,15 @@
 import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
 import axios from 'axios';
+import rateLimit from 'express-rate-limit';
+
+const analyzeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please wait a moment before trying again.' },
+});
 import { runPacingEngine } from '../engines/pacing.engine';
 import { runClimbsEngine } from '../engines/climbs.engine';
 import { runNutritionEngine } from '../engines/nutrition.engine';
@@ -112,7 +121,7 @@ router.get('/routes', async (req: Request, res: Response) => {
 });
 
 // POST /api/strava/analyze-route/:id  → fetch route streams + run analysis
-router.post('/analyze-route/:id', async (req: Request, res: Response): Promise<void> => {
+router.post('/analyze-route/:id', analyzeLimiter, async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const { access_token, ftpWatts, weightKg, intensity, startDateTime } = req.body;
 
@@ -217,7 +226,7 @@ router.get('/activities', async (req: Request, res: Response) => {
 });
 
 // POST /api/strava/analyze/:id  { access_token, ftpWatts, weightKg, intensity, startDateTime? }
-router.post('/analyze/:id', async (req: Request, res: Response): Promise<void> => {
+router.post('/analyze/:id', analyzeLimiter, async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const { access_token, ftpWatts, weightKg, intensity, startDateTime } = req.body;
 

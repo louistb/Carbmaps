@@ -31,9 +31,8 @@ console.log('CORS allowed origins:', allowedOrigins);
 app.use(cors({ origin: allowedOrigins, exposedHeaders: ['RateLimit-Reset', 'RateLimit-Limit', 'RateLimit-Remaining'] }));
 app.use(express.json());
 
-// Rate limit only the heavy compute/Strava-calling endpoints
+// Rate limit heavy compute endpoints (Strava analyze routes handled inside stravaRouter)
 app.use('/api/analyze', apiLimiter);
-app.use('/api/strava/analyze', apiLimiter); // matches both /analyze/:id and /analyze-route/:id
 
 app.use('/api/analyze', analyzeRouter);
 app.use('/api/rides', ridesRouter);
