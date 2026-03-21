@@ -12,9 +12,17 @@ const analyzeLimiter = rateLimit({
   message: { error: 'Too many requests. Please wait a moment before trying again.' },
 });
 
-// Per-user Bottleneck limiters keyed by SHA-256(ip + access_token).
-// Each user gets their own 80 req/15 min bucket — one user can't starve others.
-// Entries idle for >30 min are purged to avoid unbounded memory growth.
+// Global limiter: Strava rate-limits per app (100 req/15 min).
+// We cap at 90 to leave headroom. All users share this pool.
+const globalStravaLimiter = new Bottleneck({
+  reservoir: 90,
+  reservoirRefreshAmount: 90,
+  reservoirRefreshInterval: 15 * 60 * 1000,
+  maxConcurrent: 3,
+});
+
+// Per-user limiters keyed by SHA-256(ip + access_token): max 15 req/15 min each.
+// Prevents one user from exhausting the global pool. Idle entries purged after 30 min.
 const limiterMap = new Map<string, { limiter: Bottleneck; lastUsed: number }>();
 
 function getUserLimiter(ip: string, accessToken: string): Bottleneck {
@@ -23,7 +31,7 @@ function getUserLimiter(ip: string, accessToken: string): Bottleneck {
   let entry = limiterMap.get(key);
   if (!entry) {
     entry = {
-      limiter: new Bottleneck({ reservoir: 80, reservoirRefreshAmount: 80, reservoirRefreshInterval: 15 * 60 * 1000, maxConcurrent: 1 }),
+      limiter: new Bottleneck({ reservoir: 15, reservoirRefreshAmount: 15, reservoirRefreshInterval: 15 * 60 * 1000, maxConcurrent: 1 }),
       lastUsed: now,
     };
     limiterMap.set(key, entry);
@@ -167,9 +175,11 @@ router.post('/analyze-route/:id', analyzeLimiter, async (req: Request, res: Resp
   try {
     // Route streams return an array of { type, data } objects (different from activity streams)
     const { data: streamArr } = await getUserLimiter(req.ip ?? '', access_token).schedule(() =>
-      axios.get(`${STRAVA_API}/routes/${id}/streams`, {
-        headers: { Authorization: `Bearer ${access_token}` },
-      })
+      globalStravaLimiter.schedule(() =>
+        axios.get(`${STRAVA_API}/routes/${id}/streams`, {
+          headers: { Authorization: `Bearer ${access_token}` },
+        })
+      )
     );
 
     const find = (type: string) => streamArr.find((s: any) => s.type === type)?.data ?? [];
@@ -275,10 +285,12 @@ router.post('/analyze/:id', analyzeLimiter, async (req: Request, res: Response):
   try {
     // Fetch GPS streams from Strava
     const { data: streams } = await getUserLimiter(req.ip ?? '', access_token).schedule(() =>
-      axios.get(`${STRAVA_API}/activities/${id}/streams`, {
-        headers: { Authorization: `Bearer ${access_token}` },
-        params: { keys: 'latlng,altitude,distance,time', key_by_type: true },
-      })
+      globalStravaLimiter.schedule(() =>
+        axios.get(`${STRAVA_API}/activities/${id}/streams`, {
+          headers: { Authorization: `Bearer ${access_token}` },
+          params: { keys: 'latlng,altitude,distance,time', key_by_type: true },
+        })
+      )
     );
 
     const latlng:   [number, number][] = streams.latlng?.data   ?? [];
