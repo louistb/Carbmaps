@@ -10,6 +10,7 @@ import stravaRouter from './routes/strava';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+app.set('trust proxy', 1); // Required behind DigitalOcean / reverse proxy
 app.use(helmet());
 
 const apiLimiter = rateLimit({
