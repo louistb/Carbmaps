@@ -28,7 +28,7 @@ const allowedOrigins = [
     : []),
 ];
 console.log('CORS allowed origins:', allowedOrigins);
-app.use(cors({ origin: allowedOrigins, exposedHeaders: ['RateLimit-Reset', 'RateLimit-Limit', 'RateLimit-Remaining'] }));
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 // Rate limit heavy compute endpoints (Strava analyze routes handled inside stravaRouter)

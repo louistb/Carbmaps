@@ -136,9 +136,7 @@ export function useAnalysis() {
       return {};
     } catch (e) {
       if (axios.isAxiosError(e) && e.response?.status === 429) {
-        const resetHeader = e.response.headers['ratelimit-reset'];
-        const resetAt = resetHeader ? Number(resetHeader) : Math.floor(Date.now() / 1000) + 15 * 60;
-        return { rateLimitResetAt: resetAt };
+        return { rateLimitResetAt: Math.floor(Date.now() / 1000) + 60 };
       }
     } finally {
       setIsReanalyzing(false);
