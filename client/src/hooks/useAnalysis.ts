@@ -136,7 +136,7 @@ export function useAnalysis() {
       return {};
     } catch (e) {
       if (axios.isAxiosError(e) && e.response?.status === 429) {
-        return { rateLimitResetAt: Math.floor(Date.now() / 1000) + 60 };
+        return { rateLimitResetAt: Math.floor(Date.now() / 1000) + 900 };
       }
     } finally {
       setIsReanalyzing(false);
