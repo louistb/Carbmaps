@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAnalysisStore } from './store/analysisStore';
 import { useStrava } from './hooks/useStrava';
+import { useAnalysis } from './hooks/useAnalysis';
 import { UploadForm } from './components/upload/UploadForm';
 import { LoadingScreen } from './components/loading/LoadingScreen';
 import { Header } from './components/layout/Header';
@@ -40,10 +41,11 @@ function ResultsView() {
 }
 
 export default function App() {
-  const { appState } = useAnalysisStore();
+  const { appState, rideId, reset } = useAnalysisStore();
   const { handleCallback } = useStrava();
+  const { loadRide } = useAnalysis();
 
-  // Handle Strava OAuth redirect (Strava sends ?code=...&state=carbmaps back to the app origin)
+  // On mount: handle Strava OAuth or restore a ride from the URL (?ride=<id>)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code   = params.get('code');
@@ -51,8 +53,37 @@ export default function App() {
     if (code && state === 'carbmaps') {
       window.history.replaceState({}, '', window.location.pathname);
       handleCallback(code).catch(console.error);
+    } else {
+      const rideIdFromUrl = params.get('ride');
+      if (rideIdFromUrl) {
+        loadRide(rideIdFromUrl);
+      }
     }
   }, []);
+
+  // Sync state → URL (only pushes when the URL doesn't already match)
+  useEffect(() => {
+    const currentRideId = new URLSearchParams(window.location.search).get('ride');
+    if (appState === 'results' && rideId && currentRideId !== rideId) {
+      window.history.pushState({ rideId }, '', `?ride=${rideId}`);
+    } else if (appState === 'idle' && currentRideId) {
+      window.history.pushState({}, '', window.location.pathname);
+    }
+  }, [appState, rideId]);
+
+  // Sync URL → state on browser back/forward
+  useEffect(() => {
+    const onPopState = () => {
+      const rideIdFromUrl = new URLSearchParams(window.location.search).get('ride');
+      if (rideIdFromUrl) {
+        loadRide(rideIdFromUrl);
+      } else {
+        reset();
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [reset, loadRide]);
 
   return (
     /* Page wrapper — warm parchment bg with centered widget */
