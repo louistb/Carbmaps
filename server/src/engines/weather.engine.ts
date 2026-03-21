@@ -75,15 +75,10 @@ export async function runWeatherEngine(
     }
   }
 
-  // Fetch weather for each unique lat/lon (batch by unique coords)
-  const weatherPoints: WeatherPoint[] = [];
-  const advisories: string[] = [];
-
-  for (const sp of samplePoints) {
-    try {
-      const hourStr = formatHour(sp.estimatedArrivalIso);
-      const url = `https://api.open-meteo.com/v1/forecast`;
-      const response = await axios.get(url, {
+  // Fetch weather for all points in parallel
+  const results = await Promise.allSettled(
+    samplePoints.map(sp =>
+      axios.get('https://api.open-meteo.com/v1/forecast', {
         params: {
           latitude: sp.lat,
           longitude: sp.lon,
@@ -92,63 +87,59 @@ export async function runWeatherEngine(
           timezone: 'auto',
         },
         timeout: 8000,
-      });
+      })
+    )
+  );
 
-      const data = response.data;
-      const hourlyTimes: string[] = data.hourly?.time ?? [];
-      const temps: number[] = data.hourly?.temperature_2m ?? [];
-      const winds: number[] = data.hourly?.windspeed_10m ?? [];
-      const windDirs: number[] = data.hourly?.winddirection_10m ?? [];
-      const precip: number[] = data.hourly?.precipitation_probability ?? [];
-      const codes: number[] = data.hourly?.weathercode ?? [];
+  const weatherPoints: WeatherPoint[] = [];
+  const advisories: string[] = [];
 
-      // Find the closest hour index
-      const targetDate = new Date(sp.estimatedArrivalIso);
-      let bestIdx = 0;
-      let bestDiff = Infinity;
-      for (let i = 0; i < hourlyTimes.length; i++) {
-        const diff = Math.abs(new Date(hourlyTimes[i]).getTime() - targetDate.getTime());
-        if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
-      }
+  for (let i = 0; i < samplePoints.length; i++) {
+    const sp = samplePoints[i];
+    const result = results[i];
 
-      const tempC = temps[bestIdx] ?? 15;
-      const windSpeedKmh = winds[bestIdx] ?? 0;
-      const windDirectionDeg = windDirs[bestIdx] ?? 0;
-      const precipProbPct = precip[bestIdx] ?? 0;
-      const weatherCode = codes[bestIdx] ?? 0;
-
+    if (result.status === 'rejected') {
       weatherPoints.push({
-        label: sp.label,
-        lat: sp.lat,
-        lon: sp.lon,
-        forecastTime: hourlyTimes[bestIdx] ?? sp.estimatedArrivalIso,
-        tempC,
-        windSpeedKmh,
-        windDirectionDeg,
-        precipProbPct,
-        weatherCode,
-        weatherDescription: getWeatherDescription(weatherCode),
-      });
-
-      // Advisory checks
-      if (windSpeedKmh > 40) advisories.push(`Strong winds (${Math.round(windSpeedKmh)} km/h) expected near ${sp.label}`);
-      if (precipProbPct > 60) advisories.push(`High rain probability (${precipProbPct}%) near ${sp.label}`);
-      if (tempC > 30) advisories.push(`High temperature (${Math.round(tempC)}°C) near ${sp.label} — increase fluid intake`);
-    } catch {
-      // If weather fetch fails for a point, add a placeholder
-      weatherPoints.push({
-        label: sp.label,
-        lat: sp.lat,
-        lon: sp.lon,
+        label: sp.label, lat: sp.lat, lon: sp.lon,
         forecastTime: sp.estimatedArrivalIso,
-        tempC: 0,
-        windSpeedKmh: 0,
-        windDirectionDeg: 0,
-        precipProbPct: 0,
-        weatherCode: 0,
+        tempC: 0, windSpeedKmh: 0, windDirectionDeg: 0,
+        precipProbPct: 0, weatherCode: 0,
         weatherDescription: 'Forecast unavailable',
       });
+      continue;
     }
+
+    const data = result.value.data;
+    const hourlyTimes: string[] = data.hourly?.time ?? [];
+    const temps: number[]       = data.hourly?.temperature_2m ?? [];
+    const winds: number[]       = data.hourly?.windspeed_10m ?? [];
+    const windDirs: number[]    = data.hourly?.winddirection_10m ?? [];
+    const precip: number[]      = data.hourly?.precipitation_probability ?? [];
+    const codes: number[]       = data.hourly?.weathercode ?? [];
+
+    const targetDate = new Date(sp.estimatedArrivalIso);
+    let bestIdx = 0, bestDiff = Infinity;
+    for (let j = 0; j < hourlyTimes.length; j++) {
+      const diff = Math.abs(new Date(hourlyTimes[j]).getTime() - targetDate.getTime());
+      if (diff < bestDiff) { bestDiff = diff; bestIdx = j; }
+    }
+
+    const tempC           = temps[bestIdx] ?? 15;
+    const windSpeedKmh    = winds[bestIdx] ?? 0;
+    const windDirectionDeg = windDirs[bestIdx] ?? 0;
+    const precipProbPct   = precip[bestIdx] ?? 0;
+    const weatherCode     = codes[bestIdx] ?? 0;
+
+    weatherPoints.push({
+      label: sp.label, lat: sp.lat, lon: sp.lon,
+      forecastTime: hourlyTimes[bestIdx] ?? sp.estimatedArrivalIso,
+      tempC, windSpeedKmh, windDirectionDeg, precipProbPct, weatherCode,
+      weatherDescription: getWeatherDescription(weatherCode),
+    });
+
+    if (windSpeedKmh > 40)    advisories.push(`Strong winds (${Math.round(windSpeedKmh)} km/h) expected near ${sp.label}`);
+    if (precipProbPct > 60)   advisories.push(`High rain probability (${precipProbPct}%) near ${sp.label}`);
+    if (tempC > 30)            advisories.push(`High temperature (${Math.round(tempC)}°C) near ${sp.label} — increase fluid intake`);
   }
 
   const advisory = advisories.length > 0 ? advisories.join('. ') : null;

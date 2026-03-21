@@ -49,6 +49,7 @@ html, body {
   background-color: var(--bg-base);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
   /* iPhone safe areas */
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
@@ -224,6 +225,7 @@ tr:hover td { background: var(--bg-hover); }
   /* App wrapper: remove side margin on small phones */
   .app-card {
     margin: 0.5rem 0.25rem !important;
+    width: calc(100% - 0.5rem) !important;
     border-radius: var(--radius-md) !important;
   }
 
@@ -232,7 +234,22 @@ tr:hover td { background: var(--bg-hover); }
 
   .header-home-btn {
     order: 2;
-    margin-left: 0 !important;
+    margin-left: auto !important;
+  }
+
+  .header-starttime {
+    order: 5;
+    flex: 0 0 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .header-starttime .btn {
+    width: 100%;
+  }
+
+  .header-starttime-panel {
+    order: 6;
   }
 
   .header-slider-block {

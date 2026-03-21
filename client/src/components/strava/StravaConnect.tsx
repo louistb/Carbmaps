@@ -90,13 +90,17 @@ export function StravaConnect({ onSelect, selectedRouteId }: Props) {
               gap: '0.75rem',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <StravaLogo color={STRAVA_ORANGE} size={18} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: 1, minWidth: 0, overflow: 'hidden' }}>
+              <StravaLogo color={STRAVA_ORANGE} size={18} style={{ flexShrink: 0 }} />
               <span style={{
                 fontFamily: "'Raleway', sans-serif",
                 fontWeight: 700,
                 fontSize: '0.88rem',
                 color: 'var(--text-primary)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                minWidth: 0,
               }}>
                 {athleteName ? `Strava · ${athleteName}` : 'Strava connected'}
               </span>
@@ -109,9 +113,10 @@ export function StravaConnect({ onSelect, selectedRouteId }: Props) {
                 textTransform: 'uppercase',
                 padding: '0.15rem 0.45rem',
                 borderRadius: 4,
+                flexShrink: 0,
               }}>connected</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
               <span
                 onClick={e => { e.stopPropagation(); disconnect(); }}
                 style={{
@@ -243,6 +248,7 @@ export function StravaConnect({ onSelect, selectedRouteId }: Props) {
                             marginTop: 2,
                             display: 'flex',
                             gap: '0.6rem',
+                            flexWrap: 'wrap',
                           }}>
                             <span>{fmtDist(r.distance)}</span>
                             <span>·</span>

@@ -5,7 +5,43 @@ import { IntensitySlider, ftpPctToZoneName } from '../IntensitySlider';
 
 export function Header() {
   const { reset, rideId, isReanalyzing, result } = useAnalysisStore();
-  const { reanalyze } = useAnalysis();
+  const { reanalyze, refreshWeather } = useAnalysis();
+
+  // Derive initial start date/time from existing weather data if present
+  const existingForecastTime = result?.weather?.points?.[0]?.forecastTime;
+  const initDate = existingForecastTime
+    ? new Date(existingForecastTime).toISOString().slice(0, 10)
+    : '';
+  const initTime = existingForecastTime
+    ? new Date(existingForecastTime).toTimeString().slice(0, 5)
+    : '09:00';
+
+  const [weatherDate, setWeatherDate] = useState(initDate);
+  const [weatherTime, setWeatherTime] = useState(initTime);
+  const [isRefreshingWeather, setIsRefreshingWeather] = useState(false);
+  const [weatherOpen, setWeatherOpen] = useState(false);
+
+  // Sync inputs when a new result loads (e.g. opening a saved ride)
+  useEffect(() => {
+    if (existingForecastTime) {
+      setWeatherDate(new Date(existingForecastTime).toISOString().slice(0, 10));
+      setWeatherTime(new Date(existingForecastTime).toTimeString().slice(0, 5));
+    }
+  }, [existingForecastTime]);
+
+  const handleWeatherRefresh = async () => {
+    if (!rideId) return;
+    setIsRefreshingWeather(true);
+    try {
+      const startDateTime = weatherDate
+        ? new Date(`${weatherDate}T${weatherTime}:00`).toISOString()
+        : undefined;
+      await refreshWeather(rideId, startDateTime);
+      setWeatherOpen(false);
+    } finally {
+      setIsRefreshingWeather(false);
+    }
+  };
 
   const initIntensity = result
     ? (result.pacing.targetZonePctLow + result.pacing.targetZonePctHigh) / 2
@@ -130,6 +166,70 @@ export function Header() {
           ← Home
         </button>
       </div>
+
+      {/* Change start time button — order 4 on desktop, order 5 (bottom) on mobile */}
+      <div className="header-starttime" style={{ flexShrink: 0 }}>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() => setWeatherOpen(v => !v)}
+          style={{ fontSize: '0.72rem', padding: '0.4rem 0.9rem', whiteSpace: 'nowrap' }}
+        >
+          ⏱ Change start time
+        </button>
+      </div>
+
+      {/* Start time panel — full-width row when open */}
+      {weatherOpen && (
+        <div className="header-starttime-panel" style={{
+          flex: '0 0 100%',
+          display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap',
+          paddingTop: '0.75rem',
+          borderTop: '1px solid var(--border-subtle)',
+        }}>
+          <span style={{ fontFamily: ral, fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+            Start date &amp; time
+          </span>
+          <input
+            type="date"
+            value={weatherDate}
+            onChange={e => setWeatherDate(e.target.value)}
+            style={{
+              fontSize: '0.8rem', fontFamily: ral,
+              border: '1.5px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)',
+              padding: '0.4rem 0.6rem', background: '#fff', color: 'var(--text-primary)',
+              outline: 'none',
+            }}
+          />
+          <input
+            type="time"
+            value={weatherTime}
+            onChange={e => setWeatherTime(e.target.value)}
+            style={{
+              fontSize: '0.8rem', fontFamily: ral,
+              border: '1.5px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)',
+              padding: '0.4rem 0.6rem', background: '#fff', color: 'var(--text-primary)',
+              outline: 'none',
+            }}
+          />
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleWeatherRefresh}
+            disabled={isRefreshingWeather || !weatherDate}
+            style={{ fontSize: '0.72rem', padding: '0.4rem 1rem', letterSpacing: '0.08em' }}
+          >
+            {isRefreshingWeather ? 'Updating…' : '↻ Update weather'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setWeatherOpen(false)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: ral, fontSize: '0.72rem', color: 'var(--text-muted)', padding: '0.4rem 0.2rem' }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
     </header>
   );
 }

@@ -215,10 +215,10 @@ export function UploadForm() {
           display: 'grid',
           gridTemplateColumns: 'minmax(0,1fr) auto minmax(0,1fr)',
           gap: '0',
-          alignItems: 'stretch',
+          alignItems: 'flex-start',
         }}>
           {/* Strava panel */}
-          <div>
+          <div style={{ minWidth: 0, overflow: 'hidden' }}>
             <StravaConnect
               onSelect={handleSelectRoute}
               selectedRouteId={selectedRoute?.id ?? null}
@@ -251,6 +251,7 @@ export function UploadForm() {
               borderRadius: 'var(--radius-md)',
               background: selectedRoute ? 'var(--bg-elevated)' : dragging ? '#FBF3E4' : file ? '#FFFCF5' : '#fff',
               padding: '2rem 1.25rem',
+              minHeight: '7rem',
               textAlign: 'center',
               cursor: selectedRoute ? 'not-allowed' : 'pointer',
               transition: 'all 0.18s',

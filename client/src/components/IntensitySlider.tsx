@@ -97,7 +97,7 @@ export function IntensitySlider({ value, onChange, onCommit, step = 0.5, compact
       `}</style>
 
       {!compact && (
-        <div style={{ position: 'relative', height: 26, marginBottom: 4 }}>
+        <div style={{ position: 'relative', height: 26, marginBottom: 4, overflow: 'hidden' }}>
           <div style={{
             position: 'absolute',
             left: `${fillPct}%`,
@@ -131,7 +131,7 @@ export function IntensitySlider({ value, onChange, onCommit, step = 0.5, compact
       />
 
       {!compact && (
-        <div style={{ position: 'relative', height: 20, marginTop: 4 }}>
+        <div style={{ position: 'relative', height: 20, marginTop: 4, overflow: 'hidden' }}>
           {ZONES.map(z => {
             const midPos = toPos((z.from + z.to) / 2);
             return (

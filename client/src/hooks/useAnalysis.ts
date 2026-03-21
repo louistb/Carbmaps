@@ -55,7 +55,7 @@ export function useAnalysis() {
 
   const fetchSavedRides = () => refreshList();
 
-  const refreshWeather = async (rideId: string) => {
+  const refreshWeather = async (rideId: string, startDateTime?: string) => {
     const ride    = getLocalRide(rideId);
     const gpxText = getLocalGpx(rideId);
     if (!ride || !gpxText) return;
@@ -66,7 +66,7 @@ export function useAnalysis() {
       fd.append('ftpWatts',     String(ride.ftpWatts));
       fd.append('weightKg',     String(ride.weightKg));
       fd.append('intensity',    String(ride.intensity));
-      fd.append('startDateTime', new Date().toISOString());
+      fd.append('startDateTime', startDateTime ?? new Date().toISOString());
 
       const res = await axios.post(`${API_BASE}/api/rides/${rideId}/weather`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -122,5 +122,5 @@ export function useAnalysis() {
     }
   };
 
-  return { analyze, fetchSavedRides, loadRide, deleteRide, reanalyze };
+  return { analyze, fetchSavedRides, loadRide, deleteRide, reanalyze, refreshWeather };
 }
