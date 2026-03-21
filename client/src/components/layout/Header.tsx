@@ -74,8 +74,8 @@ export function Header() {
   useEffect(() => {
     if (result && rideId !== prevRideId.current) {
       prevRideId.current = rideId;
-      const v = (rideId && getLocalRide(rideId)?.intensity) ??
-        (result.pacing.targetZonePctLow + result.pacing.targetZonePctHigh) / 2;
+      const stored = rideId ? getLocalRide(rideId)?.intensity : undefined;
+      const v = stored ?? (result.pacing.targetZonePctLow + result.pacing.targetZonePctHigh) / 2;
       setIntensity(v);
       lastAnalyzedIntensity.current = v;
     }

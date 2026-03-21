@@ -101,7 +101,7 @@ export function useAnalysis() {
     setIsReanalyzing(true);
     try {
       const ride = getLocalRide(rideId);
-      if (!ride) { setIsReanalyzing(false); return; }
+      if (!ride) { setIsReanalyzing(false); return {}; }
 
       let res;
       const gpxText = getLocalGpx(rideId);
@@ -109,7 +109,7 @@ export function useAnalysis() {
       if (!gpxText && ride.stravaRouteId) {
         // Strava route — re-fetch GPS from Strava API (no local cache per ToS)
         const token = await getValidAccessToken();
-        if (!token) { setIsReanalyzing(false); return; }
+        if (!token) { setIsReanalyzing(false); return {}; }
         res = await axios.post(`${API_BASE}/api/strava/analyze-route/${ride.stravaRouteId}`, {
           access_token: token,
           ftpWatts: ride.ftpWatts,
@@ -117,7 +117,7 @@ export function useAnalysis() {
           intensity,
         });
       } else {
-        if (!gpxText) { setIsReanalyzing(false); return; }
+        if (!gpxText) { setIsReanalyzing(false); return {}; }
         const fd = new FormData();
         fd.append('gpxFile', new Blob([gpxText], { type: 'application/gpx+xml' }), `${rideId}.gpx`);
         fd.append('ftpWatts', String(ride.ftpWatts));
