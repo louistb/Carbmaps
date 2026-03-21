@@ -189,9 +189,10 @@ router.post('/analyze-route/:id', analyzeLimiter, async (req: Request, res: Resp
 
     res.json({ rideId, pacing, climbs, nutrition, weather, routePoints: samplePoints(points, 500) });
   } catch (err: any) {
+    const status  = err.response?.status ?? 500;
     const message = err.response?.data?.message ?? (err instanceof Error ? err.message : 'Analysis failed');
     console.error('Strava analyze-route error:', err);
-    res.status(500).json({ error: message });
+    res.status(status).json({ error: message });
   }
 });
 
@@ -296,9 +297,10 @@ router.post('/analyze/:id', analyzeLimiter, async (req: Request, res: Response):
 
     res.json({ rideId, pacing, climbs, nutrition, weather, routePoints: samplePoints(points, 500) });
   } catch (err: any) {
+    const status  = err.response?.status ?? 500;
     const message = err.response?.data?.message ?? (err instanceof Error ? err.message : 'Analysis failed');
     console.error('Strava analyze error:', err);
-    res.status(500).json({ error: message });
+    res.status(status).json({ error: message });
   }
 });
 
