@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
 import axios from 'axios';
 import rateLimit from 'express-rate-limit';
+import Bottleneck from 'bottleneck';
 
 const analyzeLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -9,6 +10,15 @@ const analyzeLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests. Please wait a moment before trying again.' },
+});
+
+// Strava allows 100 requests per 15 min. We cap at 80 to stay safe.
+// reservoir refills 80 tokens every 15 minutes; max 1 concurrent Strava call.
+const stravaLimiter = new Bottleneck({
+  reservoir: 80,
+  reservoirRefreshAmount: 80,
+  reservoirRefreshInterval: 15 * 60 * 1000,
+  maxConcurrent: 1,
 });
 import { runPacingEngine } from '../engines/pacing.engine';
 import { runClimbsEngine } from '../engines/climbs.engine';
@@ -136,9 +146,11 @@ router.post('/analyze-route/:id', analyzeLimiter, async (req: Request, res: Resp
 
   try {
     // Route streams return an array of { type, data } objects (different from activity streams)
-    const { data: streamArr } = await axios.get(`${STRAVA_API}/routes/${id}/streams`, {
-      headers: { Authorization: `Bearer ${access_token}` },
-    });
+    const { data: streamArr } = await stravaLimiter.schedule(() =>
+      axios.get(`${STRAVA_API}/routes/${id}/streams`, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      })
+    );
 
     const find = (type: string) => streamArr.find((s: any) => s.type === type)?.data ?? [];
     const latlng:   [number, number][] = find('latlng');
@@ -242,10 +254,12 @@ router.post('/analyze/:id', analyzeLimiter, async (req: Request, res: Response):
 
   try {
     // Fetch GPS streams from Strava
-    const { data: streams } = await axios.get(`${STRAVA_API}/activities/${id}/streams`, {
-      headers: { Authorization: `Bearer ${access_token}` },
-      params: { keys: 'latlng,altitude,distance,time', key_by_type: true },
-    });
+    const { data: streams } = await stravaLimiter.schedule(() =>
+      axios.get(`${STRAVA_API}/activities/${id}/streams`, {
+        headers: { Authorization: `Bearer ${access_token}` },
+        params: { keys: 'latlng,altitude,distance,time', key_by_type: true },
+      })
+    );
 
     const latlng:   [number, number][] = streams.latlng?.data   ?? [];
     const altitude: number[]           = streams.altitude?.data ?? [];
