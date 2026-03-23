@@ -36,6 +36,31 @@ export function StravaConnect({ onSelect, selectedRouteId }: Props) {
   return (
     <div style={{ marginBottom: '0.25rem' }}>
 
+      {/* ── Review notice ── */}
+      {!connected && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '0.5rem',
+          background: '#fef3c7',
+          border: '1px solid #fde68a',
+          borderRadius: 'var(--radius-sm)',
+          padding: '0.55rem 0.75rem',
+          marginBottom: '0.6rem',
+        }}>
+          <span style={{ fontSize: '0.8rem', flexShrink: 0, marginTop: 1 }}>⏳</span>
+          <p style={{
+            margin: 0,
+            fontFamily: "'Raleway', sans-serif",
+            fontSize: '0.72rem',
+            lineHeight: 1.45,
+            color: '#92400e',
+          }}>
+            <strong>Strava access is temporarily limited.</strong> Our integration is currently going through Strava's review process, which restricts the number of athletes who can connect. We expect full access to be available within 7–10 days.
+          </p>
+        </div>
+      )}
+
       {/* ── Not connected ── */}
       {!connected && (
         <button
