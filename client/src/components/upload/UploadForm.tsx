@@ -458,7 +458,7 @@ export function UploadForm() {
           fontWeight: 500,
           color: 'var(--text-muted)',
         }}>
-          Vibe coded by Slimshader 🥴 with love
+          Created by Slimshader 🥴 with love
           {' · '}
           <a
             href="/privacy"
