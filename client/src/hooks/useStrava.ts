@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import { useAnalysisStore } from '../store/analysisStore';
 import {
@@ -24,6 +24,18 @@ export function useStrava() {
   const [routes, setRoutes]               = useState<StravaRoute[]>([]);
   const [loadingRoutes, setLoadingRoutes] = useState(false);
   const [connected, setConnected]         = useState(isStravaConnected);
+
+  // Sync connected state across all hook instances when OAuth callback completes
+  useEffect(() => {
+    const onConnected  = () => setConnected(true);
+    const onDisconnected = () => setConnected(false);
+    window.addEventListener('strava-connected', onConnected);
+    window.addEventListener('strava-disconnected', onDisconnected);
+    return () => {
+      window.removeEventListener('strava-connected', onConnected);
+      window.removeEventListener('strava-disconnected', onDisconnected);
+    };
+  }, []);
   const { setAppState, setResult, setError } = useAnalysisStore();
 
   const connect = useCallback(async () => {
@@ -45,6 +57,7 @@ export function useStrava() {
     const tokens = await res.json();
     saveStravaTokens(tokens);
     setConnected(true);
+    window.dispatchEvent(new Event('strava-connected'));
     analytics.stravaConnected();
   }, []);
 
@@ -61,6 +74,7 @@ export function useStrava() {
     }
     clearStravaTokens();
     setConnected(false);
+    window.dispatchEvent(new Event('strava-disconnected'));
     setRoutes([]);
   }, []);
 
