@@ -43,3 +43,19 @@ export function fourthPowerMean(values: number[]): number {
   const sum = values.reduce((acc, v) => acc + Math.pow(v, 4), 0);
   return Math.pow(sum / values.length, 0.25);
 }
+
+/**
+ * Smooth an elevation array with a simple box average of ±halfWidth points.
+ * Reduces GPS noise without blurring real gradient features.
+ */
+export function smoothElevation(elevations: number[], halfWidth = 3): number[] {
+  const n = elevations.length;
+  if (n === 0) return [];
+  return elevations.map((_, i) => {
+    const lo = Math.max(0, i - halfWidth);
+    const hi = Math.min(n - 1, i + halfWidth);
+    let sum = 0;
+    for (let j = lo; j <= hi; j++) sum += elevations[j];
+    return sum / (hi - lo + 1);
+  });
+}

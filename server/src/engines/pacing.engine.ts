@@ -1,7 +1,7 @@
 import { ParsedRoute } from '../types/route.types';
 import { RiderSettings } from '../types/rider.types';
 import { PacingResult, SegmentPacing } from '../types/analysis.types';
-import { clamp, durationAdjustmentFactor, fourthPowerMean, rollingAverage } from '../utils/math';
+import { clamp, durationAdjustmentFactor, fourthPowerMean, rollingAverage, smoothElevation } from '../utils/math';
 
 const SEGMENT_LENGTH_KM = 1.0;
 
@@ -73,6 +73,11 @@ export function runPacingEngine(route: ParsedRoute, rider: RiderSettings): Pacin
   const powerTrace: number[] = [];
 
   const totalPoints = route.points;
+
+  // Smooth elevation to reduce GPS noise before computing gradients.
+  // A ±3 point box average removes point-level noise while preserving real climbs.
+  const smoothedElevations = smoothElevation(totalPoints.map(p => p.elevationM), 3);
+
   let segStart = 0;
 
   while (segStart < totalPoints.length - 1) {
@@ -89,8 +94,8 @@ export function runPacingEngine(route: ParsedRoute, rider: RiderSettings): Pacin
     const segLengthKm = endDist - startDist;
     if (segLengthKm <= 0) { segStart = segEnd; continue; }
 
-    const elevStart = totalPoints[segStart].elevationM;
-    const elevEnd   = totalPoints[segEnd].elevationM;
+    const elevStart = smoothedElevations[segStart];
+    const elevEnd   = smoothedElevations[segEnd];
     const gradientPct = ((elevEnd - elevStart) / (segLengthKm * 1000)) * 100;
 
     const gFactor = gradientFactor(gradientPct);
@@ -103,8 +108,7 @@ export function runPacingEngine(route: ParsedRoute, rider: RiderSettings): Pacin
     const segTimeSec = (segLengthKm / speedKmh) * 3600;
     const segTimeMin = segTimeSec / 60;
 
-    const flag: SegmentPacing['flag'] =
-      (gradientPct > 6 && targetPowerPct > 105) ? 'hold-back' : null;
+    const flag: SegmentPacing['flag'] = gradientPct >= 6 ? 'hold-back' : null;
 
     const thirtySecIntervals = Math.max(1, Math.round(segTimeSec / 30));
     for (let i = 0; i < thirtySecIntervals; i++) {
@@ -115,7 +119,7 @@ export function runPacingEngine(route: ParsedRoute, rider: RiderSettings): Pacin
       segmentIndex: segments.length,
       startKm: startDist,
       endKm: endDist,
-      elevationM: Math.round(elevStart),
+      elevationM: Math.round(smoothedElevations[segStart]),
       gradient: Math.round(gradientPct * 10) / 10,
       targetPowerW: Math.round(targetPowerW),
       targetPowerPct: Math.round(targetPowerPct * 10) / 10,

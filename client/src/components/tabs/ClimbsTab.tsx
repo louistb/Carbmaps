@@ -12,17 +12,17 @@ function formatTime(min: number): string {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
-function severityLabel(avg: number): string {
-  if (avg >= 10) return 'Brutal';
-  if (avg >= 7)  return 'Hard';
-  if (avg >= 5)  return 'Moderate';
-  return 'Easy';
+function categoryLabel(category: string): string {
+  if (category === 'hc') return 'HC';
+  return category.replace('cat', 'Cat ');
 }
 
-function severityColor(avg: number): { bg: string; color: string; border: string } {
-  if (avg >= 10) return { bg: '#F9EDEA', color: '#6B1F0A', border: '#C06050' };
-  if (avg >= 7)  return { bg: '#FBF3E4', color: '#7A5010', border: '#C9A96E' };
-  if (avg >= 5)  return { bg: '#F0F5E8', color: '#2A3A00', border: '#8AB06B' };
+function categoryColor(category: string): { bg: string; color: string; border: string } {
+  if (category === 'hc')   return { bg: '#F9EDEA', color: '#6B1F0A', border: '#C06050' };
+  if (category === 'cat1') return { bg: '#FBF3E4', color: '#7A5010', border: '#C9A96E' };
+  if (category === 'cat2') return { bg: '#FBF3E4', color: '#7A5010', border: '#C9A96E' };
+  if (category === 'cat3') return { bg: '#F0F5E8', color: '#2A3A00', border: '#8AB06B' };
+  if (category === 'cat4') return { bg: '#F0F5E8', color: '#2A3A00', border: '#8AB06B' };
   return { bg: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: 'var(--border-subtle)' };
 }
 
@@ -64,7 +64,7 @@ export function ClimbsTab({ data, routePoints }: Props) {
             const fillPct    = Math.min(climb.avgGradientPct / 15 * 100, 100);
             const maxFillPct = Math.min(climb.maxGradientPct / 15 * 100, 100);
             const isHovered  = hoveredClimbIdx === idx;
-            const sev        = severityColor(climb.avgGradientPct);
+            const sev        = categoryColor(climb.category);
 
             return (
               <div
@@ -84,7 +84,7 @@ export function ClimbsTab({ data, routePoints }: Props) {
                     {climb.name}
                   </div>
                   <span style={{ fontFamily: ral, fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1.5px solid ${sev.border}`, borderRadius: '2px', padding: '0.1rem 0.35rem', flexShrink: 0, background: sev.bg, color: sev.color }}>
-                    {severityLabel(climb.avgGradientPct)}
+                    {categoryLabel(climb.category)}
                   </span>
                 </div>
 

@@ -1,4 +1,6 @@
 import 'dotenv/config';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -39,8 +41,10 @@ app.use('/api/analyze', analyzeRouter);
 app.use('/api/rides', ridesRouter);
 app.use('/api/strava', stravaRouter);
 
+const { version } = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8'));
+
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', version, timestamp: new Date().toISOString() });
 });
 
 app.listen(PORT, () => {

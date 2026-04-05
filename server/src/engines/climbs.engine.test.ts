@@ -384,6 +384,59 @@ describe('runClimbsEngine', () => {
     });
   });
 
+  describe('climb categorisation', () => {
+    // score = (elevationGainM × avgGradientPct) / 10
+
+    it('assigns cat5 when score < 25', () => {
+      // gain ≈ 20m (500m at 4%), score = (20 × 4) / 10 = 8 → cat5
+      const segments = [makeSegment(0, 0, 0.5, 4.0)];
+      const result = runClimbsEngine(routeWithClimb(1, 0, 0.5, 20), defaultRider, makePacing(segments));
+      expect(result.climbs[0].category).toBe('cat5');
+    });
+
+    it('assigns cat4 when score is 25–60', () => {
+      // gain ≈ 60m (1km at 6%), score = (60 × 6) / 10 = 36 → cat4
+      const segments = [makeSegment(0, 0, 1, 6)];
+      const result = runClimbsEngine(routeWithClimb(1, 0, 1, 60), defaultRider, makePacing(segments));
+      expect(result.climbs[0].category).toBe('cat4');
+    });
+
+    it('assigns cat3 when score is 60–120', () => {
+      // gain ≈ 100m (2km at 5%), score = (100 × 5) / 10 = 50... need higher
+      // gain ≈ 140m (2km at 7%), score = (140 × 7) / 10 = 98 → cat3
+      const segments = [makeSegment(0, 0, 1, 7), makeSegment(1, 1, 2, 7)];
+      const result = runClimbsEngine(routeWithClimb(2, 0, 2, 140), defaultRider, makePacing(segments));
+      expect(result.climbs[0].category).toBe('cat3');
+    });
+
+    it('assigns cat2 when score is 120–250', () => {
+      // gain ≈ 210m (3km at 7%), score = (210 × 7) / 10 = 147 → cat2
+      const segments = [makeSegment(0, 0, 1, 7), makeSegment(1, 1, 2, 7), makeSegment(2, 2, 3, 7)];
+      const result = runClimbsEngine(routeWithClimb(3, 0, 3, 210), defaultRider, makePacing(segments));
+      expect(result.climbs[0].category).toBe('cat2');
+    });
+
+    it('assigns cat1 when score is 250–500', () => {
+      // gain ≈ 400m (5km at 8%), score = (400 × 8) / 10 = 320 → cat1
+      const segs = Array.from({ length: 5 }, (_, i) => makeSegment(i, i, i + 1, 8));
+      const result = runClimbsEngine(routeWithClimb(5, 0, 5, 400), defaultRider, makePacing(segs));
+      expect(result.climbs[0].category).toBe('cat1');
+    });
+
+    it('assigns hc when score >= 500', () => {
+      // gain ≈ 700m (7km at 10%), score = (700 × 10) / 10 = 700 → hc
+      const segs = Array.from({ length: 7 }, (_, i) => makeSegment(i, i, i + 1, 10));
+      const result = runClimbsEngine(routeWithClimb(7, 0, 7, 700), defaultRider, makePacing(segs));
+      expect(result.climbs[0].category).toBe('hc');
+    });
+
+    it('exposes a non-negative difficultyScore', () => {
+      const segments = [makeSegment(0, 0, 1, 6), makeSegment(1, 1, 2, 6)];
+      const result = runClimbsEngine(routeWithClimb(2, 0, 2, 120), defaultRider, makePacing(segments));
+      expect(result.climbs[0].difficultyScore).toBeGreaterThanOrEqual(0);
+    });
+  });
+
   describe('edge cases', () => {
     it('handles a single-segment climb at exactly MIN_GRADIENT_PCT (4%)', () => {
       const segments = [makeSegment(0, 0, 1, 4.0)];

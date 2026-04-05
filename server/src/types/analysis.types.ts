@@ -21,6 +21,8 @@ export interface PacingResult {
   targetZonePctHigh: number;
 }
 
+export type ClimbCategory = 'cat5' | 'cat4' | 'cat3' | 'cat2' | 'cat1' | 'hc';
+
 export interface ClimbData {
   climbNumber: number;
   name: string;
@@ -32,6 +34,8 @@ export interface ClimbData {
   estimatedDurationMin: number;
   suggestedPowerW: number;
   suggestedPowerPct: number;
+  difficultyScore: number;
+  category: ClimbCategory;
 }
 
 export interface ClimbsResult {

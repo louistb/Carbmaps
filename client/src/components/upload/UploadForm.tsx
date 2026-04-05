@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAnalysis } from '../../hooks/useAnalysis';
 import { useAnalysisStore } from '../../store/analysisStore';
@@ -89,6 +89,14 @@ export function UploadForm() {
   const [startDate, setStartDate]             = useState('');
   const [startTime, setStartTime]             = useState('09:00');
   const [dragging, setDragging]               = useState(false);
+  const [serverVersion, setServerVersion]     = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/health')
+      .then(r => r.json())
+      .then(d => d.version && setServerVersion(d.version))
+      .catch(() => {});
+  }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault(); setDragging(false);
@@ -196,8 +204,18 @@ export function UploadForm() {
           letterSpacing: '0.1em',
           color: 'var(--text-muted)',
           opacity: 0.7,
+          display: 'flex',
+          gap: '0.5rem',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}>
-          v{__APP_VERSION__}
+          <span>client v{__APP_VERSION__}</span>
+          {serverVersion && (
+            <>
+              <span style={{ opacity: 0.4 }}>·</span>
+              <span>server v{serverVersion}</span>
+            </>
+          )}
         </div>
       </motion.div>
 

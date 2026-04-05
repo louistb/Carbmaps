@@ -1,11 +1,28 @@
 import { ParsedRoute } from '../types/route.types';
 import { RiderSettings } from '../types/rider.types';
-import { PacingResult, ClimbsResult, ClimbData } from '../types/analysis.types';
+import { PacingResult, ClimbsResult, ClimbData, ClimbCategory } from '../types/analysis.types';
 import { clamp } from '../utils/math';
 
 const MIN_GRADIENT_PCT = 4.0;
 const MIN_LENGTH_KM = 0.5;
 const MAX_GAP_KM = 4.0; // merge climbs with a flat gap smaller than this
+
+/**
+ * Categorise a climb using score = (elevationGainM × avgGradientPct) / 10.
+ * Thresholds are calibrated so Alpe d'Huez (~883) is HC and a minimal
+ * 500m / 4% climb (~8) is Cat 5.
+ */
+function categorise(elevationGainM: number, avgGradientPct: number): { difficultyScore: number; category: ClimbCategory } {
+  const difficultyScore = Math.round((elevationGainM * avgGradientPct) / 10);
+  let category: ClimbCategory;
+  if      (difficultyScore >= 500) category = 'hc';
+  else if (difficultyScore >= 250) category = 'cat1';
+  else if (difficultyScore >= 120) category = 'cat2';
+  else if (difficultyScore >= 60)  category = 'cat3';
+  else if (difficultyScore >= 25)  category = 'cat4';
+  else                             category = 'cat5';
+  return { difficultyScore, category };
+}
 
 export function runClimbsEngine(
   route: ParsedRoute,
@@ -85,17 +102,23 @@ export function runClimbsEngine(
       const suggestedPowerW = clamp(climbPowerFactor * ftpWatts, 0, ftpWatts * 1.05);
       const suggestedPowerPct = (suggestedPowerW / ftpWatts) * 100;
 
+      const roundedAvgGradient = Math.round(avgGradientPct * 10) / 10;
+      const roundedElevationGain = Math.round(elevationGainM);
+      const { difficultyScore, category } = categorise(roundedElevationGain, roundedAvgGradient);
+
       climbs.push({
         climbNumber: climbs.length + 1,
         name: `Climb ${climbs.length + 1}`,
         startKm: Math.round(startKm * 10) / 10,
         lengthKm: Math.round(lengthKm * 10) / 10,
-        elevationGainM: Math.round(elevationGainM),
-        avgGradientPct: Math.round(avgGradientPct * 10) / 10,
+        elevationGainM: roundedElevationGain,
+        avgGradientPct: roundedAvgGradient,
         maxGradientPct: Math.round(maxGradientPct * 10) / 10,
         estimatedDurationMin: Math.round(estimatedDurationMin * 10) / 10,
         suggestedPowerW: Math.round(suggestedPowerW),
         suggestedPowerPct: Math.round(suggestedPowerPct * 10) / 10,
+        difficultyScore,
+        category,
       });
   }
 
