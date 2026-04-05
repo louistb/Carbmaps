@@ -8,7 +8,13 @@
       "Bash(git worktree:*)",
       "Skill(update-config)",
       "Bash(git:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(wc:*)",
+      "Bash(code:*)",
+      "Bash(npm test:*)",
+      "Bash(npx jest:*)",
+      "Bash(npx tsc:*)",
+      "Bash(taskkill:*)"
     ]
   },
   "hooks": {
