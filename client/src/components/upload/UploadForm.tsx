@@ -9,6 +9,8 @@ import { useStrava } from '../../hooks/useStrava';
 import type { StravaRoute } from '../../hooks/useStrava';
 import { analytics } from '../../lib/analytics';
 
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
+
 const fadeUp = {
   hidden: { opacity: 0, y: 18 },
   show:   { opacity: 1, y: 0,  transition: { duration: 0.38, ease: 'easeOut' } },
@@ -92,7 +94,7 @@ export function UploadForm() {
   const [serverVersion, setServerVersion]     = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/health')
+    fetch(`${API_BASE}/api/health`)
       .then(r => r.json())
       .then(d => d.version && setServerVersion(d.version))
       .catch(() => {});

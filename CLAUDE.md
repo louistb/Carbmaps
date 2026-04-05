@@ -6,6 +6,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 CarbMaps is a cycling route analysis web app that processes GPX/FIT/TCX files and generates pacing, climb, nutrition, and weather plans. It is privacy-first and stateless: the backend never writes to disk or a database. All ride persistence is client-side via localStorage.
 
+## Session Setup
+
+At the start of every Claude Code session, automatically start both servers in background shells:
+
+```bash
+# Backend (port 3001)
+cd server && npm run dev   # run in background
+
+# Frontend (port 5173)
+cd client && npm run dev   # run in background
+```
+
+When the session ends, stop both background server processes.
+
 ## Commands
 
 ### Development (run both concurrently in separate terminals)
@@ -31,7 +45,9 @@ cd client && npm run build   # tsc + vite build
 cd server && npm start   # node dist/index.js
 ```
 
-There are no test commands — the project has no test suite.
+```bash
+cd server && npm test   # Jest — runs climb detection unit tests
+```
 
 ### Deploy to production
 
